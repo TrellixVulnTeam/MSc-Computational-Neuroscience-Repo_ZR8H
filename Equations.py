@@ -6,6 +6,7 @@ Created on Fri Feb 21 17:03:16 2020
 
 @author: eshor
 
+GitHub edit which I will try to pull into my local repo.
 
 EQUATIONS:
     

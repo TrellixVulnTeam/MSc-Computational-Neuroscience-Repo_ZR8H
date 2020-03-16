@@ -9,7 +9,6 @@ Created on Fri Feb 21 17:03:16 2020
 
 EQUATIONS:
     
-    #WRONG 1) Calc_DeltaConc: Calculating the change in concentration of any ion species
     2) Calc_I_Ion: Calculates the current of a particular ion
     3) Calc_E_Ion: Calculates the Potential of an ion at a point in time
     4) Calc_Vm: Calculates the membrane potential based on the charge difference approach
@@ -41,11 +40,7 @@ RTF = R*T*(1/F)
 ############################################################################
 #******************************** METHODS *********************************#
 ############################################################################
-#1
-def Calc_DeltaConc(I_ion,neuron_volume):
-    "Calculates the delta concentration of an ion species"
-    Delta_Conc = I_ion * 1/(F*neuron_volume)
-    return Delta_Conc
+
 
 #2
 def Calc_I_Ion(g_ion,V_m,E_ion):

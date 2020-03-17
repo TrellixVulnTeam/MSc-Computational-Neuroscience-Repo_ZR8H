@@ -17,7 +17,6 @@ Questions for Kira:
 
 import numpy as np
 import matplotlib.pyplot as plt
-#from Equations import Calc_Am, Calc_Vm, Calc_DeltaConc, Calc_I_Ion, Calc_E_Ion, Calc_Jp, Calc_Jkcc2, Calc_Ol
 import Equations as eq
 
 ############################################################################

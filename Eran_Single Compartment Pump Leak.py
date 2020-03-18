@@ -23,48 +23,49 @@ import Equations as eq
 #******************************** CONSTANTS *******************************#
 ############################################################################
 
-R = 8.31466 # J/(K.mol) #Universal Gas Constant
+R = 8.31466 # J/(Kelvin.mol) #Universal Gas Constant
 F = 96485.33 #C/mol # Faraday Constant in Volts
-T = 310.15 #K # Absolute temperature (37C)
-RTF = R*T*(1/F)
-
+T = 310.15 #Kelvin # Absolute temperature (37C)
+RTF = R*T/F
+    
 ######### CHANNEL properties (conductances, pump rate constant) 
 
-g_Na = 2e-3 # Siemens #Na Leak conductance
-g_K = 7e-3 # S #K Leak conductance
-g_Cl = 2e-3 # S #Cl Leak conductance
-g_KCC2 = 2e-3 # S #KCC2 conductance
+g_Na = 20*100   # uS/cm2 converted to uS/dm2 #Na Leak conductance
+g_K = 70*100    # uS/cm2 converted to uS/dm2 #K Leak conductance
+g_Cl = 20*100   # uS/cm2 converted to uS/dm2 #Cl Leak conductance
+g_KCC2 = 20*100 # uS/cm2 converted to uS/dm2 #KCC2 conductance
 
-p = 0.1 # C/(dm^2.s) #default pump rate constant
+p = 0.1         # C/(dm^2.s) #default pump rate constant of Na/K ATPase
 
 ######### IONIC properties (concentrations and osmolalities)
 
-ConcI_K = 122.9*1e-3 #M #Intracellular K+ concentration
-ConcI_Na = 14*1e-3 #M #Intracellular Na+ concentration
-ConcI_Cl = 5.2*1e-3 #M #Intracellular Cl- concentration
-ConcI_X = 154.9*1e-3 #M #Intracellular impermeant anion (X) concentration
+ConcI_K = 122.9*1e-3    #M #Intracellular K+ concentration
+ConcI_Na = 14*1e-3      #M #Intracellular Na+ concentration
+ConcI_Cl = 5.2*1e-3     #M #Intracellular Cl- concentration
+ConcI_X = 154.9*1e-3    #M #Intracellular impermeant anion (X) concentration
 
-ConcO_Na = 145*1e-3 #M #Extracellular Na+ concentration
-ConcO_K = 3.5*1e-3 #M #Extracellular K+ concentration
-ConcO_Cl = 119*1e-3 #M #Extracellular Cl- concentration
-ConcO_X = 29.5*1e-3 #M #Extracellular impermeant anion (X) concentration
+ConcO_Na = 145*1e-3     #M #Extracellular Na+ concentration
+ConcO_K = 3.5*1e-3      #M #Extracellular K+ concentration
+ConcO_Cl = 119*1e-3     #M #Extracellular Cl- concentration
+ConcO_X = 29.5*1e-3     #M #Extracellular impermeant anion (X) concentration
 testOsm = ConcO_Na+ConcO_K-ConcO_Cl-ConcO_Cl
 
 z = -0.85 #Mean charge of intracellular and extracellular anions X
 
 #########  MEMBRANE and CELLULAR properties (capacitance, permeabilities, volumes) """
-C_m = 2*10e-4 # F/dm^2 #Unit of membrane capacitance
-k_m = 25 #N/dm #Variable for membrane tension
-w = 2*1e-12 #L #Volume of a single compartment
-diam = 10*1e-5 #Diameter of the single compartment (um converted to dm)
-length = 25*1e-5 #Length of the single compartment (um converted to dm)
-v_H2O = 0.018 # dm^3 / mol # Partial molar volume of water
-p_H2O = 0.0015 # dm/s # Osmotic permeability
+
+C_m = 2                 # uF/cm^2 #Unit of membrane capacitance
+k_m = 25                #N/dm #Variable for membrane tension
+w = 2*1e-12             #L #Volume of a single compartment
+diam = 10*1e-5          #Diameter of the single compartment (um converted to dm)
+length = 25*1e-5        #Length of the single compartment (um converted to dm)
+v_H2O = 0.018           # dm^3 / mol # Partial molar volume of water
+p_H2O = 0.0015          # dm/s # Osmotic permeability
 
 v_max =5*1e-3 #M/s Vmax (Raimondo 2012)
 
 
-dt = 1 #s #Time step
+
 dv = 0 #mV #Voltage changes
 
 
@@ -81,11 +82,12 @@ t_Arr =[]
 
 
 ### REPLICATING CHLORIDE LEAK - KIRA FIGURE 1B
-## SIMULATION RUNNING FOR 20 MINS WITH 0.5s TIME STEP
-ConcI_Cl = 50*1e-3 #M #Intracellular Cl- concentration
-ConcO_Cl = 119*1e-3 #M #Extracellular Cl- concentration
-dt = 0.05 #s #Time step
-V_m = -72.6*1e-3 #V
+## SIMULATION RUNNING FOR 20 MINS WITH 0.001s TIME STEP
+
+ConcI_Cl = 5*1e-3       #M #Starting Intracellular Cl- concentration
+ConcO_Cl = 119*1e-3      #M #Starting Extracellular Cl- concentration
+dt = 1e-1                #s #Time step
+V_m = -72.6*1e-3         #V #Starting membrane potential
 V_m_Arr =[]
 ConcI_Cl_arr =[]
 ConcI_Na_arr =[]
@@ -102,21 +104,22 @@ w_Arr =[]
 Jp_arr =[]
 Jkcc2_arr = []
 
-for t in np.arange(1,1200,dt):
+for t in np.arange(1,1200,dt):# t is the real time
     
-    #Calculating the SA, Am (ratio of SA:w), Vm,dw(delta volume):
-    SA = eq.Calc_SA(diam, length)
+    #Calculating the SA,Volume(w), Am (ratio of SA:w), Vm,dw(delta volume):
+    SA = eq.Calc_SA(diam, length) # in dm2
+    w = eq.Calc_w(diam, length)  # in dm3
     A_m = eq.Calc_Am(SA,w)
     V_m = eq.Calc_Vm(ConcI_Na,ConcI_K,ConcI_Cl,z,ConcI_X,C_m,A_m)
     V_m_Arr.append(V_m)
     
     #Calculating internal and external osmolalities and change in cell volume
     #OsmolI,OsmolO = eq.Calc_Osmol(ConcI_Na,ConcO_Na,ConcI_K,ConcO_K,ConcI_Cl,ConcO_Cl,ConcI_X,ConcO_X)
-    OsmolI = ConcI_Na+ConcO_K-ConcI_Cl-ConcI_X
+    OsmolI = ConcI_Na+ConcI_K-ConcI_Cl-ConcI_X
     OsmolO = ConcO_Na+ConcO_K-ConcO_Cl-ConcO_X
     dw = eq.Calc_dw(v_H2O,p_H2O,SA,OsmolI,OsmolO,dt)
     w = w+dw
-    w_Arr.append(w*1e12)
+    w_Arr.append(w*1e12) #pL for ease of reading
     
     #Calculating pump rates of ATPase and KCC2
     Jp = eq.Calc_Jp(p,ConcI_Na,ConcO_Na) ## XXX pump rate seems odd

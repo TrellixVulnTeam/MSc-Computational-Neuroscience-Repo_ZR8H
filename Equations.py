@@ -22,6 +22,7 @@ EQUATIONS:
      Calc_Hp: Calculates Hydrostatic pressure
      Calc_dw_Constrained: Calculates the dw constrained by hydrostatic pressures
      Calc_SA: Calculates Surface Area of the cell
+     Calc_w: Calculates the Volume of the cell
     """
 
 
@@ -56,7 +57,7 @@ def Calc_E_Ion(z_ion,ConcOut_ion, ConcIn_ion):
 def Calc_Vm(ConcI_Na,ConcI_K,ConcI_Cl,z,ConcI_X,Cm,Am):
     numerator = F*(ConcI_Na+ConcI_K-ConcI_Cl+z*ConcI_X) 
     denominator = Cm*Am
-    Vm = numerator/denominator
+    Vm = numerator/denominator *1e3 #analytical units of the formula get you to uV, this is converted to mV
     return Vm
 
 
@@ -116,5 +117,11 @@ def Calc_dw_Constrained(vw,pw,SA,Osmol_I, Osmol_O,dt,Hp):
 
 def Calc_SA(diam,length):
     rad = diam/2
-    SA = (2*np.pi*rad)*length #Ends have been removed
+    SA = 2*np.pi*rad*length #Ends have been removed
     return SA
+
+def Calc_w(diam,length):
+    rad = diam/2
+    w = (np.pi*rad**2)*length #Ends have been removed
+    return w
+

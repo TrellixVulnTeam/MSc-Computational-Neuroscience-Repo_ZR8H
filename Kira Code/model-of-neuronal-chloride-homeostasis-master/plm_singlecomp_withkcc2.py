@@ -140,14 +140,14 @@ def plm(p=(10**(default_p))/(F),graph=0,pkcc=gkcc,gx=0,xt=100000,os_init=ose,cli
             xinit=x
         else:
             cl=(os_init+(z-1)*x)/2.0
-            print cl
+            print(cl)
     
     if k_init==0:
         k=cl-z*x-na
         
-    print "k_init: "+str(k)
-    print "osi: "+str(k+cl+x+na)
-    print "z_aim: "+str(ztarget) +" with zflux of "+str(Zx)
+    print("k_init: "+str(k))
+    print("osi: "+str(k+cl+x+na))
+    print("z_aim: "+str(ztarget) +" with zflux of "+str(Zx))
     
     xm=x*ratio
     xtemp=x*(1-ratio)
@@ -263,7 +263,7 @@ def plm(p=(10**(default_p))/(F),graph=0,pkcc=gkcc,gx=0,xt=100000,os_init=ose,cli
                     tt=t+1000
             else:
                 if (min(z,zx)<=ztarget<=max(z,zx)):
-                    print 'anions stopped diffusing at '+str(t)
+                    print('anions stopped diffusing at '+str(t))
                     xend=1
                     dx=0
                 else:
@@ -272,7 +272,7 @@ def plm(p=(10**(default_p))/(F),graph=0,pkcc=gkcc,gx=0,xt=100000,os_init=ose,cli
                         tt=t+50
                         dx=-xflux
                     else:
-                        print 'anions stopped diffusing at '+str(t)
+                        print( 'anions stopped diffusing at '+str(t))
                         xend=1
                         dx=0
                 
@@ -354,9 +354,9 @@ def plm(p=(10**(default_p))/(F),graph=0,pkcc=gkcc,gx=0,xt=100000,os_init=ose,cli
         #plt.savefig(title)
         plt.show()
     
-    print 'na', na, 'k', k, 'cl', cl, 'x', x, 'vm', V, 'cle', cle, 'ose', ose, 'osi', osi, 'deltx', x*w-xinit*w1
-    print 'w', w, 'radius', rad, 'z', z
-    print 'ecl', Cl[-1]
+    print('na', na, 'k', k, 'cl', cl, 'x', x, 'vm', V, 'cle', cle, 'ose', ose, 'osi', osi, 'deltx', x*w-xinit*w1)
+    print('w', w, 'radius', rad, 'z', z)
+    print('ecl', Cl[-1])
     return na, k, cl, x, V, Na[-1], K[-1], Cl[-1], X[-1], Vm[-1], W, time, Na, K, Cl, X, Vm, Cl2, Na2, K2, X2, w, z_delt, xe_delt, gkcc_delt, a0, a1, a2, naflux, kflux, clflux, wflux, Xflux, np.log10(jp*F), osi, ose
 
 def zplm(z=z,gkcc=gkcc,gcl=gcl,gna=gna,gk=gk,molinit=0):

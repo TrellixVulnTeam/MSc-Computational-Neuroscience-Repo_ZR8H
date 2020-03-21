@@ -56,8 +56,9 @@ def Calc_E_Ion(z_ion,ConcOut_ion, ConcIn_ion):
 
 def Calc_Vm(ConcI_Na,ConcI_K,ConcI_Cl,z,ConcI_X,Cm,Am):
     numerator = F*(ConcI_Na+ConcI_K-ConcI_Cl+z*ConcI_X) 
-    denominator = Cm*Am
-    Vm = numerator/denominator *1e3 #analytical units of the formula get you to uV, this is converted to mV
+    # denominator = Cm*Am            # in Fraser and Huang's paper they don't divide by Ar.
+    denominator = Cm
+    Vm = numerator/denominator *1e-3 #analytical units of the formula get you to uV, this is converted to mV
     return Vm
 
 
@@ -88,17 +89,20 @@ def Calc_Am(SA,w):
 
 
 def Calc_dNa(Am,gNa,Vm,ENa,Jp,w,ConcI_Na,dt,dw):
-    dNa = (-Am/F)*dt*(gNa*(Vm-ENa)+3*Jp) - (1/w)*dw*ConcI_Na
+    #dNa = (-Am/F)*dt*(gNa*(Vm-ENa)+3*Jp) - (1/w)*dw*ConcI_Na       # Original dNa
+    dNa = dt*((-1/F)*(gNa*(Vm-ENa)+3*Jp) - (1/w)*dw*ConcI_Na)        # dNa without Scale factor
     return dNa
 
 
 def Calc_dK(Am,gK,Vm,EK,Jp,Jkcc2,w,ConcI_K,dt,dw):
-    dK = (-Am/F) *dt*(gK*(Vm-EK)-2*Jp-Jkcc2) - 1/w*dw*ConcI_K
+    #dK = (-Am/F) *dt*(gK*(Vm-EK)-2*Jp-Jkcc2) - 1/w*dw*ConcI_K      # Original dK
+    dK = dt*((-1/F)*(gK*(Vm-EK)-2*Jp-Jkcc2) - 1/w*dw*ConcI_K)       # dK without Scale factor
     return dK
 
 
 def Calc_dCl(Am,gCl,Vm,ECl,Jkcc2,w,ConcI_Cl,dt,dw):
-    dCl = (Am/F) *dt*(gCl*(Vm-ECl)+Jkcc2) - 1/w*dw*ConcI_Cl
+    # dCl = (Am/F) *dt*(gCl*(Vm-ECl)+Jkcc2) - 1/w*dw*ConcI_Cl       # Original dCl
+    dCl = dt*((1/F)*(gCl*(Vm-ECl)+Jkcc2) - 1/w*dw*ConcI_Cl)          # dCl without Scale factor
     return dCl
     
 

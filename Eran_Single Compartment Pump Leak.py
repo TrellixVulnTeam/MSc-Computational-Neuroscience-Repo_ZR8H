@@ -30,10 +30,10 @@ RTF = R*T/F
     
 ######### CHANNEL properties (conductances, pump rate constant) 
 
-g_Na = 20*100   # uS/cm2 converted to uS/dm2 #Na Leak conductance
-g_K = 70*100    # uS/cm2 converted to uS/dm2 #K Leak conductance
-g_Cl = 20*100   # uS/cm2 converted to uS/dm2 #Cl Leak conductance
-g_KCC2 = 20*100 # uS/cm2 converted to uS/dm2 #KCC2 conductance
+g_Na = 0.01*0.1/F # S/dm2 #Na Leak conductance ### Not too sure why I need to / by F (according to Kira and Alan)
+g_K = 0.3*0.1/F     # S/dm2 #K Leak conductance
+g_Cl = 0.2*0.1/F   # S/dm2 #Cl Leak conductance
+g_KCC2 = 20*100/F # S/dm2 #KCC2 conductance
 
 p = 0.1         # C/(dm^2.s) #default pump rate constant of Na/K ATPase
 
@@ -87,8 +87,8 @@ t_Arr =[]
 
 ConcI_Cl = 10*1e-3       #M #Starting Intracellular Cl- concentration
 ConcO_Cl = 119*1e-3      #M #Starting Extracellular Cl- concentration
-dt = 0.01                 #s #Time step (Kira dt = 0.001)
-totalt = 1200            #s #Duration of simulation (5m = 300; 10m = 600; 20m = 1200)
+dt = 0.001                 #s #Time step (Kira dt = 0.001)
+totalt = 2400            #s #Duration of simulation (5m = 300; 10m = 600; 20m = 1200)
 V_m = -72.6*1e-3         #V #Starting membrane potential
 V_m_Arr =[]
 ConcI_Cl_arr =[]

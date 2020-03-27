@@ -19,6 +19,7 @@ Step 3) Add the KCC2 pump - done
 
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import Equations as eq
 
 ############################################################################
@@ -150,7 +151,15 @@ for i in range(1,totalsteps):  #note tit = total number of timesteps
 
 ####### PLOTS #######
 
-plt.plot(t_Arr,Na_Arr,t_Arr,Cl_Arr,t_Arr,K_Arr,t_Arr,X_Arr)
+plt.plot(t_Arr,Na_Arr,label ="Na")
+plt.plot(t_Arr,Cl_Arr,label="Cl")
+plt.plot(t_Arr,K_Arr,label="K")
+plt.plot(t_Arr,X_Arr,label="X")
+plt.title("Ionic concentration changes")
+plt.xlabel("Time (s)")
+plt.ylabel("Intracellular ionic concentrations (M)")
+plt.legend()
+sns.despine()
 
 
 

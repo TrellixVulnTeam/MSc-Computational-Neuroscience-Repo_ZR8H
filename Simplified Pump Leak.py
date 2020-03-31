@@ -20,7 +20,7 @@ Step 3) Add the KCC2 pump - done
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import Equations as eq
+
 
 ############################################################################
 #********************************PARAMETERS *******************************#
@@ -87,6 +87,8 @@ X_Arr = []
 Vm_Arr = []
 t_Arr = []           
 w_Arr = []
+Ek_Arr = []
+ECl_Arr = []
 
 
 ############################################################################
@@ -142,6 +144,8 @@ for i in range(1,totalsteps):  #note tit = total number of timesteps
         X_Arr.append(ConcI_X*1e3)
         w_Arr.append(100*(1e5)*((3/(4*np.pi))*w)**(1/3))
         t_Arr.append(t)
+        Ek_Arr.append(EK*1e3)
+        ECl_Arr.append(ECl*1e3)
         ctr += 1
     
         
@@ -150,7 +154,22 @@ for i in range(1,totalsteps):  #note tit = total number of timesteps
 ####### End of simulation
 
 ####### PLOTS #######
+fig1,a = plt.subplots(nrows=3,ncols=1)
+a[0].plot(t_Arr,Na_Arr,label ="Na")
+a[0].plot(t_Arr,Cl_Arr,label="Cl")
+a[0].plot(t_Arr,K_Arr,label="K")
+a[0].plot(t_Arr,X_Arr,label="X")
+a[0].xaxis.set_visible(False)
 
+a[1].plot(t_Arr,Ek_Arr,label ="EK")
+a[1].plot(t_Arr,ECl_Arr,label ="ECl")
+a[1].plot(t_Arr,Vm_Arr,label ="Vm")
+a[1].xaxis.set_visible(False)
+
+a[2].plot(t_Arr,w_Arr,label="Volume (pL)")
+sns.despine()
+
+"""
 plt.plot(t_Arr,Na_Arr,label ="Na")
 plt.plot(t_Arr,Cl_Arr,label="Cl")
 plt.plot(t_Arr,K_Arr,label="K")
@@ -158,8 +177,7 @@ plt.plot(t_Arr,X_Arr,label="X")
 plt.title("Ionic concentration changes")
 plt.xlabel("Time (s)")
 plt.ylabel("Intracellular ionic concentrations (M)")
-plt.legend()
-sns.despine()
+"""
 
 
 

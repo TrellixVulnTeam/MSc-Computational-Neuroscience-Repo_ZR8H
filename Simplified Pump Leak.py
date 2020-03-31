@@ -5,14 +5,6 @@ Created on Thu Mar 26 16:18:48 2020
 This is a Simplified Version of the Pump Leak Model found in Kira's code.
 This version is aligned with Alan Kay's code. 
 
-I will try make this code somewhat modular and increase the complexity in a step wise fashion. 
-
-Step 1) Create the compartment and control for ionic fluxes via diffusion - done
-Step 2) Add the ATP-ase pump - done
-Step 3) Add the KCC2 pump - done
-
-
-
 @author: eshor
 """
 
@@ -144,8 +136,8 @@ for i in range(1,totalsteps):  #note tit = total number of timesteps
         X_Arr.append(ConcI_X*1e3)
         w_Arr.append(100*(1e5)*((3/(4*np.pi))*w)**(1/3))
         t_Arr.append(t)
-        Ek_Arr.append(EK*1e3)
-        ECl_Arr.append(ECl*1e3)
+        Ek_Arr.append(EK)
+        ECl_Arr.append(ECl)
         ctr += 1
     
         
@@ -160,6 +152,8 @@ a[0].plot(t_Arr,Cl_Arr,label="Cl")
 a[0].plot(t_Arr,K_Arr,label="K")
 a[0].plot(t_Arr,X_Arr,label="X")
 a[0].xaxis.set_visible(False)
+a[0].annotate('annotate', xy=(t_Arr[0], 150), xytext=('ATPase On'))
+a[0].annotate('annotate', xy=(t_off, 150), xytext=('ATPase On'))
 
 a[1].plot(t_Arr,Ek_Arr,label ="EK")
 a[1].plot(t_Arr,ECl_Arr,label ="ECl")

@@ -194,7 +194,7 @@ def plm(p=(10**(default_p))/(F),graph=0,pkcc=gkcc,gx=0,xt=100000,os_init=ose,cli
             ctr+=1
         
         # various conditional states
-        if tk+360>t>tk:
+        if tk+360>t>tk:     
             pkcc+=1e-12    # control switch for gkkc ramp (Fig 3)
             vmax+=3.3e-7
         

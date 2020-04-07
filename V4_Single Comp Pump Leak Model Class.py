@@ -15,6 +15,10 @@ class SingleCompartment_PumpLeakModel():
     RTF = R*T/F  # J/C
     pw = 0.0015 #dm/s #osmotic permeability of biological membranes
     vw = 0.018 #dm^3/mol #partial molar volume of water
+    km1 = 6*10**(-7) #extensional rigidity of RBC at 23C N/dm
+    km2 = 2.5*10**(1) 
+    density = 1 #kg/dm3 --> assume close to 1 = density of water
+    hp =1e-3
     
     import numpy as np
     import matplotlib.pyplot as plt
@@ -25,10 +29,10 @@ class SingleCompartment_PumpLeakModel():
         self.radius = radius
         self.length = length
         self.cm = capacitance
-        self.volume = self.np.pi*radius**2*length
-        self.area = 2*self.np.pi*radius*length
-        self.area_scale = self.area/self.volume
-        self.f_inv_c_ar = self.F / (self.cm*self.area_scale)
+        self.volume = self.np.pi*self.radius**2*self.length
+        self.area = 2*self.np.pi*self.radius*self.length
+        self.area_scale = self.volume/self.area
+        self.f_inv_c_ar = (self.F / (self.cm)) *self.area_scale
         
     #Methods
     def Set_InternalConcentrations(self, Na = 14.002e-3, K =122.873e-3 , Cl = 5.163e-3 , impermeant_anions = 154.962e-3,impermeant_anion_charge = -0.85):
@@ -37,7 +41,18 @@ class SingleCompartment_PumpLeakModel():
         self.cl_in = Cl
         self.x_in = impermeant_anions
         self.z_x_in = impermeant_anion_charge 
-        self.osmol_in = self.na_in+self.k_in+self.cl_in+self.x_in
+        
+        if self.k_in == 0:
+            self.k_in= self.cl_in - (self.z_x_in*self.x_in) - self.na_in   
+        self.osmol_in = self.na_in+self.k_in+self.cl_in+self.x_in   
+        print("Intracellular concentrations: (Molar)")
+        print("---------------------")
+        print('Na: ',self.na_in)
+        print('K: ',self.k_in)
+        print('Cl: ', self.cl_in)
+        print('X: ', self.x_in)
+        print('Intracellular Osmolarity:',self.osmol_in)
+        print("")
      
     def Set_ExternalConcentrations(self, Na = 145e-3, K =3.5e-3, Cl = 119e-3,impermeant_anion_charge = -0.85):
         self.na_out = Na
@@ -46,6 +61,14 @@ class SingleCompartment_PumpLeakModel():
         self.x_out = -1*(self.cl_out - self.na_out - self.k_out)*0.2 
         self.z_x_out = impermeant_anion_charge 
         self.osmol_out = self.na_out + self.k_out +self.cl_out+self.x_out
+        print("Extracellular concentrations: (Molar)")
+        print("---------------------")
+        print('Na: ',self.na_out)
+        print('K: ',self.k_out)
+        print('Cl: ', self.cl_out)
+        print('X: ', self.x_out)
+        print('Extracellular Osmolarity:',self.osmol_out)
+        print("")
         
     def Set_Conductances(self, gNa= 2e-3 , gK= 7e-3 ,gCl=2e-3 , gImpermeants=0):
         self.g_na = gNa/self.F
@@ -53,19 +76,12 @@ class SingleCompartment_PumpLeakModel():
         self.g_cl = gCl/self.F
         self.g_x = gImpermeants/self.F
         
-    def Set_Timing(self,duration = 10000, time_step = 1e-3, num_intervals = 200):
-        self.t = 0                  # real time in seconds
-        self.total_t = duration     # total duration
-        self.dt = time_step         # time step
-        self.total_steps = round(self.total_t/self.dt) #total time steps
-        
-        self.n = num_intervals      # number of plot points
-        self.ctr = 1                # counter for plotting 
-        self.ts = self.total_t/self.n  #time in between plot points
+   
 
-    def Set_NaKATPase_Properties(self,time_on=0,time_off=5000,ATP_pump_rate =-1):
+    def Set_NaKATPase_Properties(self,time_off=3000,time_on=9000,ATP_pump_rate =-1):
         self.atp_t_on = time_on
         self.atp_t_off = time_off
+        #default switch position will be on
         self.p_default = ATP_pump_rate
         self.p_effective = (10**self.p_default)/self.F
         
@@ -74,7 +90,20 @@ class SingleCompartment_PumpLeakModel():
         self.kcc2_t_off = time_off
         self.g_kcc2 = KCC2_conductance/self.F
         
-    
+    def Set_Timing(self,duration = 10000, time_step = 1e-3, num_intervals = 1800):
+        self.t = 0                  # real time in seconds
+        self.total_t = duration     # total duration
+        self.dt = time_step         # time step
+        self.total_steps = round(self.total_t/self.dt) #total time steps
+        self.n = num_intervals      # number of plot points
+        self.ctr = 1                # counter for plotting 
+        self.ts = self.total_t/self.n  #time in between plot points   
+        print('Simulation will run for ',self.total_t,' seconds') 
+        print('The timestep will be', self.dt, 'seconds')
+        print('There will be ', self.total_steps, ' time steps')
+        print('The ATPase pump is switched on at', self.atp_t_on, 'seconds')
+        print('The ATPase pump is switched off at', self.atp_t_off, 'seconds')
+            
     def Initialize_Arrays(self):
         self.na_arr = []
         self.k_arr = []
@@ -85,53 +114,65 @@ class SingleCompartment_PumpLeakModel():
         self.volume_arr = []
         self.e_cl_arr =[]
         self.e_k_arr = []
+        
             
     def Set_Current(self):
         self.curr = -0*5e-8; #Baseline no current injected
 
     def Calc_Vm(self):
-        self.net_intracellular_charge = (self.na_in+self.k_in)-self.cl_in+self.z_x_in*self.x_in
-        self.vm = self.f_inv_c_ar*(self.net_intracellular_charge)
+        na = self.na_in
+        k = self.k_in
+        cl = self.cl_in
+        z = self.z_x_in
+        x = self.x_in
+        xz = x*self.z_x_in
+        net_charge = float(na + k - cl + (xz))
+        vm = self.f_inv_c_ar*(net_charge)
+        return vm
+    
+        #print('Starting voltage of: ', round(self.vm,3), 'mV')
         
     def Simulate(self):
-        
+        vm=0
+        dummy_vm_arr =[]
         for i in range(1,self.total_steps):  #note tit = total number of timesteps 
         
             # Determining switch position of ATPase
-            if (self.t<self.atp_t_off) & (self.t>self.atp_t_on): 
-                atp_sw=1 
-            else: 
-                atp_sw=0
-                
+    
+            
+            if (self.t>self.atp_t_off) & (self.t<self.atp_t_on):
+                atp_sw = 0
+            else:
+                atp_sw = 1
+            
+            
             # Voltage Calculation 
-            self.Calc_Vm()
-            #print(self.vm)
+            vm = self.Calc_Vm()
+            dummy_vm_arr.append(vm)
+            #print('Starting voltage of: ', round(vm,3), 'mV')
             
             # KCC2 pump rate calculation 
             e_k = self.RTF*self.np.log(self.k_out/self.k_in)
             e_cl = -1*self.RTF*self.np.log(self.cl_out/self.cl_in)
             j_kcc2 = self.g_kcc2*(e_k-e_cl)
-            print(e_k)
-            print(e_cl)
-            print(j_kcc2)
-    
+                
             # ATPase pump rate calclation
             j_atp = self.p_effective*(self.na_in/self.na_out)**3
             
             
             #Incrementing Ion concentration    
-            d_na = -self.dt*self.area_scale*(self.g_na*(self.vm-self.RTF*self.np.log(self.na_out/self.na_in)) + atp_sw*3*j_atp) 
-            d_k = -self.dt*self.area_scale*(self.g_k*(self.vm-self.RTF*self.np.log(self.k_out/self.k_in)) - atp_sw*2*j_atp - j_kcc2) 
-            d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*self.np.log(self.cl_out/self.cl_in)) -j_kcc2) 
-            d_x =  self.dt*self.area_scale*(self.g_x*(self.vm-self.RTF*self.np.log(self.x_out/self.x_in)) ) 
+            d_na = -self.dt/self.area_scale*(1/self.F)*(self.g_na*(vm-self.RTF*self.np.log(self.na_out/self.na_in)) + atp_sw*3*j_atp) 
+            d_k = -self.dt/self.area_scale*(1/self.F)*(self.g_k*(vm-self.RTF*self.np.log(self.k_out/self.k_in)) - atp_sw*2*j_atp - j_kcc2) 
+            d_cl = self.dt/self.area_scale*(1/self.F)*(self.g_cl*(vm-self.RTF*self.np.log(self.cl_out/self.cl_in)) + j_kcc2) 
+            d_x =  self.dt/self.area_scale*(1/self.F)*(self.g_x*(vm-self.RTF*self.np.log(self.x_out/self.x_in)) ) 
             self.na_in += d_na
             self.k_in += d_k
             self.cl_in += d_cl
             self.x_in += d_x
-            print(self.na_in)
+            """print(self.na_in)
             print(self.k_in)
             print(self.cl_in)
-            print(self.x_in)
+            print(self.x_in)"""
             
             #Osmolarity and volume adjustments
             self.osmol_in = self.na_in+self.k_in+self.cl_in+self.x_in
@@ -157,12 +198,13 @@ class SingleCompartment_PumpLeakModel():
                 self.volume_arr.append(self.volume)
                 self.t_arr.append(self.t)
                 self.ctr += 1       
-                               
+                print("episode: ", self.ctr,"/",self.n) 
+                print("Vm: ",self.vm*1e3)
                 
             self.t += self.dt 
-            print(self.cl_in)
             
-    #end of loop
+            
+    #end of loop#
     
     #print statements
         print('Simulation over')
@@ -171,15 +213,15 @@ class SingleCompartment_PumpLeakModel():
         
         
 plm = SingleCompartment_PumpLeakModel()
-plm.Set_Conductances()
 plm.Set_ExternalConcentrations()
-plm.Set_InternalConcentrations()
+plm.Set_InternalConcentrations(K = 0)
+plm.Set_Conductances()
 plm.Set_KCC2_Properties()
 plm.Set_NaKATPase_Properties()
 plm.Set_Timing()
 plm.Set_Current()
 plm.Initialize_Arrays()
-plm.Calc_Vm()
+print(plm.Calc_Vm())
 plm.Simulate()
 
 

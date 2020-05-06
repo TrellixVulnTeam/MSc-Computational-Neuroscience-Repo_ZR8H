@@ -10,11 +10,11 @@ class SingleCompartment_PumpLeakModel():
 
     #Class object attribute (i.e. true for all instances of the class)
     R = 8.31466  # J/(Kelvin.mol) #Universal Gas Constant
-    F = 96485.0 #C/mol # Faraday Constant in Volts
+    F = 96485.0  #C/mol # Faraday Constant in Volts
     T = 310.15   #Kelvin # Absolute temperature (37C)
     RTF = R*T/F  # J/C
-    pw = 0.0015 #dm/s #osmotic permeability of biological membranes
-    vw = 0.018 #dm^3/mol #partial molar volume of water
+    pw = 0.0015  #dm/s #osmotic permeability of biological membranes
+    vw = 0.018   #dm^3/mol #partial molar volume of water
     km1 = 6*10**(-7) #extensional rigidity of RBC at 23C N/dm
     km2 = 2.5*10**(1) 
     density = 1 #kg/dm3 --> assume close to 1 = density of water

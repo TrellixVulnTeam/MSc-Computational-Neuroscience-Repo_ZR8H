@@ -137,11 +137,11 @@ class SingleCompPLM():
           if atp_sw  ==1:
               if pd>pdinit:
                   pd-=ramp
-                  p_effective = (10**pd)/self.F
+                  self.p_effective = (10**pd)/self.F
           else:
               if pd<pdinit:
                   pd += ramp
-                  p_effective = (10**pd)/self.F
+                  self.p_effective = (10**pd)/self.F
                   
           j_atp = self.p_effective*(self.na_in/self.na_out)**3
           
@@ -157,7 +157,7 @@ class SingleCompPLM():
           #Incrementing Ion concentration    
           d_na = -self.dt*self.area_scale*(self.g_na*(self.vm-self.RTF*np.log(self.na_out/self.na_in)) + atp_sw*3*j_atp) # - (1/self.volume)*dw*self.na_in
           d_k = -self.dt*self.area_scale*(self.g_k*(self.vm-self.RTF*np.log(self.k_out/self.k_in)) - atp_sw*2*j_atp - j_kcc2)#  - (1/self.volume)*dw*self.k_in
-          d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*np.log(self.cl_out/self.cl_in)) + j_kcc2) # - (1/self.volume)*dw*self.cl_in
+          d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*np.log(self.cl_in/self.cl_out)) - j_kcc2) # - (1/self.volume)*dw*self.cl_in
           self.na_in += d_na
           self.k_in += d_k
           self.cl_in += d_cl

@@ -156,6 +156,7 @@ class SingleCompartment_PumpLeak():
       self.x_in *= self.volume/self.volume2
             
   def Update_arrays(self):
+      ''' Update Arrays'''
       self.vm_arr.append(self.vm*1e3)
       self.e_cl_arr.append(self.e_cl*1e3)
       self.e_k_arr.append(self.e_k*1e3)

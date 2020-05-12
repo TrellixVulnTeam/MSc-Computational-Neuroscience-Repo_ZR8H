@@ -45,9 +45,13 @@ class SingleCompartment_PumpLeak():
       self.cl_out = Cl[1]
       self.x_in = Impermeants[0]
       self.x_out = Impermeants[1]
-      self.x_out = -1*0.2*(self.cl_out-self.na_out-self.k_out)
+      self.x_out = -1*(self.cl_out-self.na_out-self.k_out)
       self.z_in = Impermeant_charges[0]
       self.z_out = Impermeant_charges[1]
+      
+      if self.k_in ==0:
+              self.k_in = self.cl_in - self.x_in*self.z_in - self.na_in
+      
       # Kira uses these to get starting extravellular impearmeants xe1=-1*(cle-nae-ke)
       # xe=xe1*0.2
 
@@ -143,7 +147,7 @@ class SingleCompartment_PumpLeak():
       '''Update Ion concentrations based on the differential equations'''
       d_na = -self.dt*self.area_scale*(self.g_na*(self.vm-self.RTF*np.log(self.na_out/self.na_in)) + self.atp_switch*3*self.j_atp) # - (1/self.volume)*dw*self.na_in
       d_k = -self.dt*self.area_scale*(self.g_k*(self.vm-self.RTF*np.log(self.k_out/self.k_in)) - self.atp_switch*2*self.j_atp - self.j_kcc2)#  - (1/self.volume)*dw*self.k_in
-      d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*np.log(self.cl_in/self.cl_out)) - self.j_kcc2) # - (1/self.volume)*dw*self.cl_in
+      d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*np.log(self.cl_in/self.cl_out)) + self.j_kcc2) # - (1/self.volume)*dw*self.cl_in
       self.na_in += d_na
       self.k_in += d_k
       self.cl_in += d_cl
@@ -166,9 +170,16 @@ class SingleCompartment_PumpLeak():
       self.x_arr.append(self.x_in*1e3)
       self.volume_arr.append(self.volume)
       self.t_arr.append(self.t)
+      
+  
         
   def Simulate_PLM(self):
       ''' Simulate the pump leak model mechanism''' 
+      
+      self.d_na =0
+      self.d_k =0
+      self.d_cl =0
+      self.dw= 0
       
       for i in range(1, self.total_steps):  
           

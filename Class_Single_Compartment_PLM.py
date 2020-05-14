@@ -89,8 +89,9 @@ class SingleCompartment_PumpLeak():
            
        self.atp_t_on = time_on
        self.atp_t_off = time_off
-       self.p_default = ATP_pump_rate
-       self.p_effective = (10**self.p_default)/self.F
+       self.p_rate_initial = ATP_pump_rate
+       self.p_rate = self.p_rate_initial
+       self.p_effective = (10**self.p_rate)/self.F
        
  
   def Set_KCC2_Properties(self,time_on=0,time_off=1000000,KCC2_conductance =2e-3 ):
@@ -118,19 +119,21 @@ class SingleCompartment_PumpLeak():
           
   def Calc_ATPase_rate(self):
       
-       p_rate = self.p_default
+       
        self.p_max = -5 
-       self.ramp_change = (p_rate-self.p_max)/(12*10**4)/8   #equivalent to em in Kira's code
-          
-       if self.atp_switch  ==1:
-              if p_rate > self.p_max:
-                  p_rate -= self.ramp_change
-                  self.p_effective = (10**p_rate)/self.F
-       else:
-              if p_rate < self.p_max:
-                  p_rate += self.ramp_change
-                  self.p_effective = (10**p_rate)/self.F   
-                  
+       self.ramp_change = (self.p_rate_initial-self.p_max)/(12*10**4)/8   #equivalent to em in Kira's code
+       
+       
+       if (self.t>self.atp_t_off) & (self.t<self.atp_t_on):
+              if self.p_rate > self.p_max:
+                  self.p_rate -= self.ramp_change
+             
+       elif (self.t>self.atp_t_on):
+               if self.p_rate < self.p_rate_initial:
+                   self.p_rate += self.ramp_change
+                   
+             
+       self.p_effective = (10**self.p_rate)/self.F           
        self.j_atp = self.p_effective*(self.na_in/self.na_out)**3
           
   
@@ -145,8 +148,8 @@ class SingleCompartment_PumpLeak():
           
   def Calc_new_ion_conc(self):  
       '''Update Ion concentrations based on the differential equations'''
-      d_na = -self.dt*self.area_scale*(self.g_na*(self.vm-self.RTF*np.log(self.na_out/self.na_in)) + self.atp_switch*3*self.j_atp) # - (1/self.volume)*dw*self.na_in
-      d_k = -self.dt*self.area_scale*(self.g_k*(self.vm-self.RTF*np.log(self.k_out/self.k_in)) - self.atp_switch*2*self.j_atp - self.j_kcc2)#  - (1/self.volume)*dw*self.k_in
+      d_na = -self.dt*self.area_scale*(self.g_na*(self.vm-self.RTF*np.log(self.na_out/self.na_in)) + 3*self.atp_switch*self.j_atp) # - (1/self.volume)*dw*self.na_in
+      d_k = -self.dt*self.area_scale*(self.g_k*(self.vm-self.RTF*np.log(self.k_out/self.k_in)) - 2*self.atp_switch*self.j_atp - self.j_kcc2)#  - (1/self.volume)*dw*self.k_in
       d_cl = self.dt*self.area_scale*(self.g_cl*(self.vm-self.RTF*np.log(self.cl_in/self.cl_out)) + self.j_kcc2) # - (1/self.volume)*dw*self.cl_in
       self.na_in += d_na
       self.k_in += d_k
@@ -176,6 +179,7 @@ class SingleCompartment_PumpLeak():
   def Simulate_PLM(self):
       ''' Simulate the pump leak model mechanism''' 
       
+      self.Initialize_Arrays()
       self.d_na =0
       self.d_k =0
       self.d_cl =0

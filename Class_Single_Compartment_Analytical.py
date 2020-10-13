@@ -9,7 +9,7 @@ Here I use Kira's analytical model equations to make calculating model values fa
 """
 import numpy as np
 
-class Class_Single_Compartment_Analytical():
+class SingleCompartment_PumpLeak_Analytical():
     
     R = 8.31466           # J/(Kelvin.mol) #Universal Gas Constant
     F = 96485.0           #C/mol # Faraday Constant in Volts

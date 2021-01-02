@@ -1,35 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Oct 13 14:46:28 2020
+Created on Sat Jan  2 17:45:32 2021
 
 @author: eshor
 
-This trial is simply to see if I can model diffusion and drift between two compartments
-Each compartment will have the same pump and leak mechanisms as in the single compartment.
-The only difference will be incorporating electrodiffusion
 
 """
-import numpy as np
-from constants import F
-from common import default_radius, default_length, \
-    clo, ko, nao, xo_z, oso, \
-    default_p, \
-    gk, gna, gcl, \
-    ck, cna, \
-    pw, vw, km, \
-    RTF, RT
+import numpy as np 
+# import copy -- WTF is that
+from common import default_radius, default_length, default_p, F, default_Cm
+
 
 class Compartment():
     
-    def __init__(self, name, radius = default_radius, length=default_length, pkcc2 = 2e-3/F, z = -0.85, p=default_p):
-      self.name = name
+    def __init__(self, compartment_name, radius = default_radius, length=default_length, Cm= default_Cm, pkcc2 = 2e-3/F, z = -0.85, p=default_p):
+      self.name = compartment_name
       self.radius = radius #in um
       self.length = length #in um
       self.w = (np.pi)*(self.radius**2)*self.length
       self.w_temp = self.w
       self.sa = 2*(np.pi)*(self.radius)*(self.length)
       self.ar = self.sa / self.w
-      self.C = 2e-4
+      self.C = Cm
       self.FinvCAr = F /(self.C *self.Ar)
       self.p_kcc2 = pkcc2
       self.p = p

@@ -38,3 +38,5 @@ points_to_plot = 200  # points to plot
 vw = 0.018 #partial molar volume of water, dm3/mol
 pw = 0.0015 #osmotic permeability, biological membrane (muscle? unknown), dm s
 km=5*10**(-14) #extensional rigidity of RBC at 23 deg, Mohandas and Evans (1994), N/dm
+
+default_Cm = 2e-4 #default membrane capacitance (F/dm^2)

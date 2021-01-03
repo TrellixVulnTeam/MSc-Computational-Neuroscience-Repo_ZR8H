@@ -8,8 +8,12 @@ Created on Sat Jan  2 17:45:32 2021
 """
 import numpy as np 
 # import copy -- WTF is that
-from common import default_radius, default_length, default_p, F, default_Cm
-
+from common import default_radius, default_length, default_p, default_Cm,\
+    oso, nao, ko, clo,\
+    gk, gna, gcl,\
+    pw,vw,km,\
+    RTF
+from constants import F
 
 class Compartment():
     
@@ -22,30 +26,33 @@ class Compartment():
       self.sa = 2*(np.pi)*(self.radius)*(self.length)
       self.ar = self.sa / self.w
       self.C = Cm
-      self.FinvCAr = F /(self.C *self.Ar)
+      self.FinvCAr = F /(self.C *self.ar)
       self.p_kcc2 = pkcc2
       self.p = p
      
-    def set_ion_properties(self, na_i = 0.033, k_i = 0.1038, cl_i = 0.0052, x_i = 0,z_i=-0.85, g_x =0e-9 ):
+     
+    def set_ion_properties(self, na_i = 14.002e-3, k_i = 122.873e-3, cl_i = 5.163e-3,z_i=-0.85, g_x =0e-9 ):
       
       # A) Intracellular ion properties:
       self.na_i = na_i
       self.k_i = k_i
       self.cl_i = cl_i 
-      self.x_i = x_i 
-      self.z = z_i
+      self.z_i = z_i
+      self.x_i = 154.962e-3
       if cl_i == 0:
             # setting chloride that is osmo- and electro-neutral initially.
             self.cl_i = (oso + (self.na_i + self.k_i) * (1 / self.z_i - 1)) / (1 + self.z_i)
       
-      if self.k_i == 0:
+      """if self.k_i == 0:
             self.x_i = 155.858e-3
             self.k_i = self.cl_i-self.z_i*self.x_i-self.na_i
       else:
-            self.x_i = (self.cl_i - self.k_i - self.na_i) / self.z_i 
+            self.x_i = (self.cl_i - self.k_i - self.na_i) / self.z_i """
             
       self.g_x = g_x #basically 0 ... therefore impermeant
-      
+      self.g_na = gna
+      self.g_k = gk
+      self.g_cl = gcl
           
       if self.x_i < 0 or self.cl_i < 0:
           raise Exception("""Initial choice of either ki or nai resulted in negative concentration of
@@ -67,12 +74,102 @@ class Compartment():
       self.d_k_i = 0
       self.d_cl_i = 0
       self.d_x_i = 0
-      self.d_z = 0
+          
+      
+      # E) Zeroing arrays 
+      self.na_arr = []
+      self.k_arr = []
+      self.cl_arr =[]
+      self.d_na_arr =[]
+      self.d_k_arr =[]
+      self.d_cl_arr =[]
+      self.V_arr =[]
+      self.E_k_arr = []
+      self.E_cl_arr =[]
+      self.w_arr=[]
+      self.ar_arr=[]
         
-    def calc_voltages(self):
         
+    def step(self, dt=1e-3):
+        """
+        Perform a time step for the specific compartment.
+        
+        1) Calculate the Membrane voltage
+        2) Update cubic pump rate
+        3) Update KCC2 flux rate
+        4) Solve ion flux equations for t+dt from t
+        5) Increment ionic concentrations
+        6) update volume 
+        7) correct ionic concentrations due to volume changes
+        
+        """
+
+        self.dt=dt
+       #1) Updating voltages
         self.V=self.FinvCAr * (self.na_i + self.k_i + (self.z_i*self.x_i) - self.cl_i)
-        self.E_k = RTF * np.log(self.k_o / self.k_i)
-        self.E_cl = RTF * np.log(self.cl_i / self.cl_o)
-        self.j_kcc2 = self.p_kcc2 * (self.E_k - self.E_cl)  # Doyon
-        self.j_p = self.p * (self.na_i / self.na_o) ** 3
+        self.E_k = RTF * np.log(ko / self.k_i)
+        self.E_cl = RTF * np.log(self.cl_i / clo)
+        
+               
+       #2) Update cubic pump rate
+        self.j_p = self.p * (self.na_i / nao) ** 3
+        
+       #3) Update KCC2 flux
+        self.j_kcc2 = self.p_kcc2*(self.E_k - self.E_cl)
+       #4) Solve ion flux equations for t+dt from t
+        self.d_na_i = -dt * self.ar * (self.g_na * (self.V - RTF * np.log(self.na_o / self.na_i)) + 3*self.j_p)
+        self.d_k_i = - dt * self.ar * (self.g_k * (self.V - RTF * np.log(self.k_o/self.k_i)) -2*self.j_p - self.j_kcc2)
+        self.d_cl_i = dt * self.ar * (self.g_cl * (self.V + RTF * np.log(self.cl_o/self.cl_i)) + self.j_kcc2)
+       #5) Increment ion concentrations
+        self.na_i = self.na_i + self.d_na_i
+        self.k_i = self.k_i + self.d_k_i
+        self.cl_i = self.cl_i + self.d_cl_i 
+
+       #6) Test Arrays:
+        
+        self.d_na_arr.append(self.d_na_i)
+       
+        self.d_k_arr.append(self.d_k_i)
+  
+        self.d_cl_arr.append(self.d_cl_i)
+        self.V_arr.append(self.V)
+        self.E_k_arr.append(self.E_k)
+        self.E_cl_arr.append(self.E_cl)
+        
+
+    def update_volumes(self):    
+       #6) Update volume
+        ''' Calculates the new compartment volume (dm3)'''
+        self.osm_i = self.na_i + self.k_i+ self.cl_i + self.x_i
+        self.radius = np.sqrt(self.w/(np.pi*self.length))
+        self.sa = 2*(np.pi)*(self.radius)*(self.length)
+        self.dw = self.dt * pw * vw * self.sa * (self.osm_i - self.osm_o)
+        self.w2 = self.w+self.dw
+        
+    
+        
+       #7) Correct ionic concentrations due to volume changes
+        self.na_i = self.na_i*self.w/self.w2
+        self.k_i = self.k_i*self.w/self.w2
+        self.cl_i = self.cl_i*self.w/self.w2
+        self.x_i = self.x_i*self.w/self.w2
+        
+        self.w=self.w2
+        self.ar = self.sa/self.w
+        self.FinvCAr = F /(self.C *self.ar)
+        
+        
+
+        ##### Radius and length will also have to be updated for electrodiffusion calculation
+
+    def update_arrays(self):
+        
+        self.na_arr.append(self.na_i)
+        self.k_arr.append(self.k_i)
+        self.cl_arr.append(self.cl_i)
+        self.w_arr.append(self.w)
+        self.ar_arr.append(self.ar)
+        
+        
+        
+        

@@ -255,3 +255,4 @@ class Compartment(TimeMixin):
         # return """Compartment({0},radius={1}, length={2}, pkcc2={3}, z={4}, nai={5}, ki={6},
         #          p={7}, cli={8})
         # """.format(self.name,self.r,self.L,self.pkcc2,self.z,self.nai,self.ki,self.p,self.cli)
+Comp =Compartment("c1")

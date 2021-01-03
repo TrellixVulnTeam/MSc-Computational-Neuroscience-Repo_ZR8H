@@ -53,6 +53,9 @@ class Electrodiffusion():
         return J_drift  
     
     def calc_electrodiffusion(self):
-        """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector"""
+        """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector
+        
+        * Note that the flux between compartment a to b = flux from b to a
+        """
         J = self.calc_drift() + self.calc_diffusion()
         return J

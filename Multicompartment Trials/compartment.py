@@ -15,9 +15,10 @@ from common import default_radius, default_length, default_p, default_Cm,\
     RTF
 from constants import F
 
+
 class Compartment():
     
-    def __init__(self, compartment_name, radius = default_radius, length=default_length, Cm= default_Cm, pkcc2 = 2e-3/F, z = -0.85, p=default_p):
+    def __init__(self, compartment_name, radius = default_radius, length=default_length, Cm= default_Cm, pkcc2 = 2e-3/F, p=default_p):
       self.name = compartment_name
       self.radius = radius #in um
       self.length = length #in um
@@ -39,11 +40,12 @@ class Compartment():
       self.cl_i = cl_i 
       self.z_i = z_i
       self.x_i = 154.962e-3
-      if cl_i == 0:
+      
+      """if cl_i == 0:
             # setting chloride that is osmo- and electro-neutral initially.
             self.cl_i = (oso + (self.na_i + self.k_i) * (1 / self.z_i - 1)) / (1 + self.z_i)
       
-      """if self.k_i == 0:
+      if self.k_i == 0:
             self.x_i = 155.858e-3
             self.k_i = self.cl_i-self.z_i*self.x_i-self.na_i
       else:
@@ -76,7 +78,16 @@ class Compartment():
       self.d_x_i = 0
           
       
-      # E) Zeroing arrays 
+      # E) x-location of ions 
+      """"Assume that all ionic species can be considered a ball which moves across the x axis based on ED"""
+      self.start_xloc = self.length/2 #ion starts in the centre of the compartment
+      self.na_xloc = self.start_xloc
+      self.k_xloc = self.start_xloc
+      self.cl_xloc = self.start_xloc
+      self.x_xloc = self.start_xloc
+      
+      
+      # F) Zeroing arrays 
       self.na_arr = []
       self.k_arr = []
       self.cl_arr =[]
@@ -95,8 +106,8 @@ class Compartment():
         Perform a time step for the specific compartment.
         
         1) Calculate the Membrane voltage
-        2) Update cubic pump rate
-        3) Update KCC2 flux rate
+        2) Calculate Electrodiffusion Flux for each ion
+        3) Update ATP and KCC2 flux rate
         4) Solve ion flux equations for t+dt from t
         5) Increment ionic concentrations
         6) update volume 
@@ -111,21 +122,27 @@ class Compartment():
         self.E_cl = RTF * np.log(self.cl_i / clo)
         
                
-       #2) Update cubic pump rate
-        self.j_p = self.p * (self.na_i / nao) ** 3
+       #2) Electrodiffusion calculations 
         
-       #3) Update KCC2 flux
+       #3) Update ATPase and KCC2 pump rate
+        self.j_p = self.p * (self.na_i / nao) ** 3
         self.j_kcc2 = self.p_kcc2*(self.E_k - self.E_cl)
+        
        #4) Solve ion flux equations for t+dt from t
-        self.d_na_i = -dt * self.ar * (self.g_na * (self.V - RTF * np.log(self.na_o / self.na_i)) + 3*self.j_p)
-        self.d_k_i = - dt * self.ar * (self.g_k * (self.V - RTF * np.log(self.k_o/self.k_i)) -2*self.j_p - self.j_kcc2)
-        self.d_cl_i = dt * self.ar * (self.g_cl * (self.V + RTF * np.log(self.cl_o/self.cl_i)) + self.j_kcc2)
+        self.d_na_i = - self.dt * self.ar * (self.g_na * (self.V - RTF * np.log(self.na_o / self.na_i)) + 3*self.j_p)
+        self.d_k_i  = - self.dt * self.ar * (self.g_k * (self.V - RTF * np.log(self.k_o/self.k_i)) -2*self.j_p - self.j_kcc2)
+        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.V + RTF * np.log(self.cl_o/self.cl_i)) + self.j_kcc2)
        #5) Increment ion concentrations
         self.na_i = self.na_i + self.d_na_i
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i 
 
-       #6) Test Arrays:
+       
+       
+       
+       
+
+        #6) Test Arrays:
         
         self.d_na_arr.append(self.d_na_i)
        
@@ -136,12 +153,16 @@ class Compartment():
         self.E_k_arr.append(self.E_k)
         self.E_cl_arr.append(self.E_cl)
         
+    
+        
 
     def update_volumes(self):    
        #6) Update volume
-        ''' Calculates the new compartment volume (dm3)'''
+        ''' Calculates the new compartment volume (dm3)
+        Elongation should occur length ways not radially
+        '''
         self.osm_i = self.na_i + self.k_i+ self.cl_i + self.x_i
-        self.radius = np.sqrt(self.w/(np.pi*self.length))
+        self.length = self.w/(np.pi * self.radius**2)
         self.sa = 2*(np.pi)*(self.radius)*(self.length)
         self.dw = self.dt * pw * vw * self.sa * (self.osm_i - self.osm_o)
         self.w2 = self.w+self.dw

@@ -18,7 +18,7 @@ total_t = 120 #total time in seconds
 run_t = 0 # running time, starting at 0 seconds
 dt = 1e-3 # time step in seconds
 t_arr = []
-
+run_t=0
 
 Comp_a = Compartment("comp_a")
 Comp_a.set_ion_properties()
@@ -39,4 +39,4 @@ while run_t < total_t:
     
     
     
-plt.plot(t_arr, Comp_a.ar_arr)
+plt.plot(t_arr, Comp_a.na_arr)

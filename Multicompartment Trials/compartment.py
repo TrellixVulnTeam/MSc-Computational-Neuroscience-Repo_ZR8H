@@ -6,13 +6,13 @@ Created on Sat Jan  2 17:45:32 2021
 
 
 """
-import numpy as np 
+import numpy as np
+
 # import copy -- WTF is that
-from common import default_radius, default_length, default_p, default_Cm,\
-    oso, nao, ko, clo,\
-    gk, gna, gcl,\
-    pw,vw,km,\
-    RTF
+from common import default_radius, default_length, default_p, default_Cm, \
+    oso, nao, ko, clo, \
+    gk, gna, gcl, \
+    pw, vw, RTF
 from constants import F
 
 

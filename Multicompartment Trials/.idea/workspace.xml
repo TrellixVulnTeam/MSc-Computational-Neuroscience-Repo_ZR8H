@@ -7,6 +7,9 @@
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FavoritesManager">
+    <favorites_list name="Multicompartment Trials" />
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
@@ -22,8 +25,8 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore.virus.scanning.warn.message" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="configurable.group.appearance" />
+    <property name="last_opened_file_path" value="D:/Programs/Anaconda/_conda.exe" />
+    <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
   <component name="RunManager">
     <configuration name="Unnamed" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
@@ -59,7 +62,8 @@
     </option>
   </component>
   <component name="SvnConfiguration">
-    <configuration />
+    <configuration>C:\Users\eshor\AppData\Roaming\Subversion</configuration>
+    <myIsUseDefaultProxy>true</myIsUseDefaultProxy>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -71,6 +75,8 @@
       <workItem from="1609666554383" duration="3064000" />
       <workItem from="1609693519951" duration="76000" />
       <workItem from="1609693625522" duration="81000" />
+      <workItem from="1610706590548" duration="3416000" />
+      <workItem from="1610711455530" duration="2667000" />
     </task>
     <servers />
   </component>
@@ -78,6 +84,10 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
+    <state x="275" y="23" key="#Notifications" timestamp="1610711988577">
+      <screen x="0" y="0" width="1366" height="728" />
+    </state>
+    <state x="275" y="23" key="#Notifications/0.0.1366.728@0.0.1366.728" timestamp="1610711988577" />
     <state x="137" y="20" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1609666866901">
       <screen x="0" y="0" width="1366" height="728" />
     </state>
@@ -86,13 +96,21 @@
       <screen x="0" y="0" width="1366" height="728" />
     </state>
     <state x="363" y="101" key="#com.intellij.openapi.updateSettings.impl.PluginUpdateInfoDialog/0.0.1366.728@0.0.1366.728" timestamp="1609667951321" />
-    <state x="184" y="7" key="SettingsEditor" timestamp="1609693657792">
+    <state x="462" y="139" key="FileChooserDialogImpl" timestamp="1610711208902">
       <screen x="0" y="0" width="1366" height="728" />
     </state>
-    <state x="184" y="7" key="SettingsEditor/0.0.1366.728@0.0.1366.728" timestamp="1609693657792" />
-    <state x="379" y="189" key="com.intellij.ide.util.TipDialog" timestamp="1609693522156">
+    <state x="462" y="139" key="FileChooserDialogImpl/0.0.1366.728@0.0.1366.728" timestamp="1610711208902" />
+    <state x="184" y="7" key="SettingsEditor" timestamp="1610711966344">
       <screen x="0" y="0" width="1366" height="728" />
     </state>
-    <state x="379" y="189" key="com.intellij.ide.util.TipDialog/0.0.1366.728@0.0.1366.728" timestamp="1609693522156" />
+    <state x="184" y="7" key="SettingsEditor/0.0.1366.728@0.0.1366.728" timestamp="1610711966344" />
+    <state x="379" y="189" key="com.intellij.ide.util.TipDialog" timestamp="1610711459268">
+      <screen x="0" y="0" width="1366" height="728" />
+    </state>
+    <state x="379" y="189" key="com.intellij.ide.util.TipDialog/0.0.1366.728@0.0.1366.728" timestamp="1610711459268" />
+    <state x="346" y="49" width="672" height="678" key="search.everywhere.popup" timestamp="1610709584252">
+      <screen x="0" y="0" width="1366" height="728" />
+    </state>
+    <state x="346" y="49" width="672" height="678" key="search.everywhere.popup/0.0.1366.728@0.0.1366.728" timestamp="1610709584252" />
   </component>
 </project>

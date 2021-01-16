@@ -8,16 +8,16 @@ Analgous to the diffusion class from Kira and Chris
 @author: eshor
 """
 
-from common import T, RTF
+from common import T, RTF,val,diff_constants
 from compartment import Compartment
 from constants import k,q,valence
 
 
 
-class Electrodiffusion():
+class Electrodiffusion:
     """ Class to manage all the 1 dimensional electrodiffusion calculations"""
     
-    def __init__ (self, comp_a: Compartment, comp_b: Compartment, d_ion:dict):
+    def __init__ (self, comp_a= Compartment, comp_b= Compartment):
         """Creating a connection between 2 compartments
         comp_a refers to the first compartment
         comp_b refers to the second compartment
@@ -28,34 +28,45 @@ class Electrodiffusion():
         self.comp_a = comp_a
         self.comp_b = comp_b
         self.dx =self.comp_a.length/2 + self.comp_b.length/2
-        self.ion = d_ion.keys()
-        self.diff_coeff = d_ion.values()
+
+
         
         
-    def calc_diffusion(self):
+    def calc_diffusion(self,ion="",conc_a=0,conc_b=0):
         """
         Calculates Fick's law for Diffusion
         F = -D*dc/dx
         """
-        dc = self.comp_a.conc_i(self.ion)+ self.comp_b.conc_i(self.ion) 
-        J_diffusion = -1* self.diff_coeff * dc / self.dx
+        d = diff_constants[ion]
+        dc = conc_b - conc_a
+        j_diffusion = -1 * d * dc / self.dx
+        return j_diffusion
         
         
-    def calc_drift(self):
+    def calc_drift(self,ion = "",conc_a=0, conc_b=0,dV=0,):
         """
         Calculates Ohm's law for Drift
         Drift = -D*z/RTF*dV/dx*[C]
         """
-        dV = self.comp_a.V - self.comp_b.V
-        z = valence(self.ion)
-        J_drift = - (self.diff_coeff / RTF * z * dV / self.dx) * (self.comp_a.conc_i(self.ion)+ self.comp_b.conc_i(self.ion))
-        ## Chris and Kira have a odd way of calculating the difference in concentration
-        return J_drift  
+        z = val[ion]
+        d = diff_constants[ion]
+        j_drift = - (d / RTF * z * dV / self.dx) * (conc_a+ conc_b)
+        # Chris and Kira have a odd way of calculating the difference in concentration
+        return j_drift
     
-    def calc_electrodiffusion(self):
+    def calc_ed(self,dt=1e-3, comp_a_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0},comp_b_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0}):
         """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector
-        
+
         * Note that the flux between compartment a to b = flux from b to a
         """
-        J = self.calc_drift() + self.calc_diffusion()
-        return J
+
+        self.ed_change = {"na": 0, "k": 0, "cl": 0, "x": 0}
+        dV = comp_a_ed_dict["Vm"] - comp_b_ed_dict["Vm"]
+
+
+        for i in self.ed_change:
+            self.ed_change[i] += self.calc_drift(dV,i,comp_a_ed_dict[i],comp_b_ed_dict[i])
+            self.ed_change[i] += self.calc_diffusion(i,comp_a_ed_dict[i],comp_b_ed_dict[i])
+            self.ed_change[i] *= dt
+
+        return self.ed_change

@@ -3,6 +3,8 @@
 Created on Mon Aug 22 2016
 Python 3.x targeted
 @author: Chris & Kira
+
+updated by Eran Sat Jun 2021
 """
 # constants
 # R with different units
@@ -18,6 +20,8 @@ F = 96485.33  # Faraday's constant        C mol-1
 k = 1.38e-23  # Boltzmann constant        J K-1
 q = 1.602176620898e-19  # elementary charge         C
 Na = 6.022e23  # Avogadro's constant       mol-1
+
+
 
 
 def valence(ion: str):

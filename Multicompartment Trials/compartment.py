@@ -77,13 +77,6 @@ class Compartment():
         self.d_cl_i = 0
         self.d_x_i = 0
 
-        # E) x-location of ions
-        """"Assume that all ionic species can be considered a ball which moves across the x axis based on ED"""
-        self.start_xloc = self.length / 2  # ion starts in the centre of the compartment
-        self.na_xloc = self.start_xloc
-        self.k_xloc = self.start_xloc
-        self.cl_xloc = self.start_xloc
-        self.x_xloc = self.start_xloc
 
         # F) Zeroing arrays
         self.na_arr = []

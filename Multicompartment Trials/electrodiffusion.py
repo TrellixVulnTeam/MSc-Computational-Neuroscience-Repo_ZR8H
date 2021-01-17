@@ -61,12 +61,13 @@ class Electrodiffusion:
         """
 
         self.ed_change = {"na": 0, "k": 0, "cl": 0, "x": 0}
-        dV = comp_a_ed_dict["Vm"] - comp_b_ed_dict["Vm"]
 
+        dv = comp_a_ed_dict["Vm"] - comp_b_ed_dict["Vm"]
+        ions = list(self.ed_change)
 
-        for i in self.ed_change:
-            self.ed_change[i] += self.calc_drift(dV,i,comp_a_ed_dict[i],comp_b_ed_dict[i])
-            self.ed_change[i] += self.calc_diffusion(i,comp_a_ed_dict[i],comp_b_ed_dict[i])
-            self.ed_change[i] *= dt
-
+        for i in range(4):
+            ion = ions[i]
+            self.ed_change[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)
+            self.ed_change[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
+            self.ed_change[ion] *= dt
         return self.ed_change

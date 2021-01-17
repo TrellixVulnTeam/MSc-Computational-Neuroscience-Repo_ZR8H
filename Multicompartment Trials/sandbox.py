@@ -4,8 +4,14 @@ x = ed_change.keys()
 y = ed_change.values()
 print(x)
 
-for i in ed_change:
-   print(ed_change[i])
+
+a = list(ed_change.keys())
+
+ion = a[2]
+ed_change[ion] = 7
+print(ed_change)
+
+
 
 
 

@@ -19,7 +19,8 @@ import seaborn as sns
 dt = 1e-3  # 1ms time steps
 total_t = 1200  # s
 run_t = 0  # current simulation timing
-t_arr = [0]
+t_arr = []
+
 
 
 comp_1 = compartment.Compartment("comp_1")
@@ -40,7 +41,14 @@ while run_t < total_t:
     comp_2.ed_update(ed_conc_changes)
     comp_1.update_volumes()
     comp_1.update_arrays()
+    comp_2.update_volumes()
+    comp_2.update_arrays()
     run_t += dt
     t_arr.append(run_t)
 
-plt.plot(t_arr,comp_1.k_arr)
+plt.plot(t_arr, comp_1.w_arr)
+plt.show()
+print(comp_1.get_fin_vals())
+
+
+

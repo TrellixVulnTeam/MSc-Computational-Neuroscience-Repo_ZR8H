@@ -21,8 +21,8 @@ class Compartment():
     def __init__(self, compartment_name, radius=default_radius, length=default_length, Cm=default_Cm, pkcc2=2e-3 / F,
                  p=default_p):
         self.name = compartment_name
-        self.radius = radius  # in um
-        self.length = length  # in um
+        self.radius = radius  # in dm
+        self.length = length  # in dm
         self.w = (np.pi) * (self.radius ** 2) * self.length
         self.w_temp = self.w
         self.sa = 2 * (np.pi) * (self.radius) * (self.length)
@@ -56,20 +56,13 @@ class Compartment():
         self.g_k = gk
         self.g_cl = gcl
 
-        if self.x_i < 0 or self.cl_i < 0:
-            raise Exception("""Initial choice of either ki or nai resulted in negative concentration of
-                                    intracellular ion - choose different starting values.""")
 
-            # B) Osmolality:
-        self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-        self.osm_o = oso
-        if self.osm_i != self.osm_o:
-            print("Compartement {} not osmo-neutral".format(self.name))
 
         # C) Extracellular ion properties:
         self.na_o = nao
         self.k_o = ko
         self.cl_o = clo
+        self.osm_o = oso
 
         # D) Zeroing Delta values
         self.d_na_i = 0
@@ -82,14 +75,18 @@ class Compartment():
         self.na_arr = []
         self.k_arr = []
         self.cl_arr = []
+        self.x_arr = []
         self.d_na_arr = []
         self.d_k_arr = []
         self.d_cl_arr = []
-        self.V_arr = []
+        self.v_arr = []
+        self.d_w_arr = []
         self.E_k_arr = []
         self.E_cl_arr = []
         self.w_arr = []
         self.ar_arr = []
+        self.osm_i_arr=[]
+        self.osm_o_arr =[]
 
     def step(self, dt=1e-3):
         """
@@ -109,7 +106,7 @@ class Compartment():
         self.dt = dt
 
         # 1) Updating voltages
-        self.V = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
+        self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
         self.E_k = RTF * np.log(ko / self.k_i)
         self.E_cl = RTF * np.log(self.cl_i / clo)
 
@@ -119,10 +116,9 @@ class Compartment():
 
         # 3) Solve ion flux equations for t+dt from t
 
-        self.d_na_i = - self.dt * self.ar * (self.g_na * (self.V - RTF * np.log(self.na_o / self.na_i)) + 3 * self.j_p)
-        self.d_k_i = - self.dt * self.ar * (
-                    self.g_k * (self.V - RTF * np.log(self.k_o / self.k_i)) - 2 * self.j_p - self.j_kcc2)
-        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.V + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
+        self.d_na_i = - self.dt * self.ar * (self.g_na * (self.v - RTF * np.log(self.na_o / self.na_i)) + 3 * self.j_p)
+        self.d_k_i = - self.dt * self.ar * (self.g_k * (self.v - RTF * np.log(self.k_o / self.k_i)) - 2 * self.j_p - self.j_kcc2)
+        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
         self.na_i = self.na_i + self.d_na_i
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
@@ -131,14 +127,7 @@ class Compartment():
 
         # 6) Test Arrays:
 
-        self.d_na_arr.append(self.d_na_i)
 
-        self.d_k_arr.append(self.d_k_i)
-
-        self.d_cl_arr.append(self.d_cl_i)
-        self.V_arr.append(self.V)
-        self.E_k_arr.append(self.E_k)
-        self.E_cl_arr.append(self.E_cl)
 
     def update_volumes(self):
         # 6) Update volume
@@ -146,18 +135,20 @@ class Compartment():
         Elongation should occur length ways not radially
         '''
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-        self.length = self.w / (np.pi * self.radius ** 2)
-        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
         self.dw = self.dt * pw * vw * self.sa * (self.osm_i - self.osm_o)
         self.w2 = self.w + self.dw
 
-        # 7) Correct ionic concentrations due to volume changes
         self.na_i = self.na_i * self.w / self.w2
         self.k_i = self.k_i * self.w / self.w2
         self.cl_i = self.cl_i * self.w / self.w2
         self.x_i = self.x_i * self.w / self.w2
 
         self.w = self.w2
+
+        #self.length = self.w / (np.pi * self.radius ** 2)
+        self.radius = np.sqrt(self.w /(np.pi*self.length))
+        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
+
         self.ar = self.sa / self.w
         self.FinvCAr = F / (self.C * self.ar)
 
@@ -165,11 +156,21 @@ class Compartment():
 
     def update_arrays(self):
 
-        self.na_arr.append(self.na_i)
-        self.k_arr.append(self.k_i)
-        self.cl_arr.append(self.cl_i)
-        self.w_arr.append(self.w)
+        self.na_arr.append(self.na_i*1000)
+        self.k_arr.append(self.k_i*1000)
+        self.cl_arr.append(self.cl_i*1000)
+        self.x_arr.append(self.x_i*1000)
+        self.w_arr.append(self.w*(10**12))
         self.ar_arr.append(self.ar)
+        self.v_arr.append(self.v*1000)
+        self.d_na_arr.append(self.d_na_i)
+        self.d_k_arr.append(self.d_k_i)
+        self.d_cl_arr.append(self.d_cl_i)
+        self.d_w_arr.append(self.dw)
+        self.E_k_arr.append(self.E_k)
+        self.E_cl_arr.append(self.E_cl)
+        self.osm_i_arr.append(self.osm_i)
+        self.osm_o_arr.append(self.osm_o)
 
     def ed_update(self, ed_change: dict):
 
@@ -179,5 +180,17 @@ class Compartment():
         self.x_i += ed_change["x"]
 
     def get_ed_dict(self):
-        ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.V}
+        ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}
         return ed_dict
+
+    def get_fin_vals(self):
+
+        valstring = self.name + " final values: "
+        valstring = valstring + " Na: " + str(self.na_arr[-1])
+        valstring = valstring + " K: " + str(self.k_arr[-1])
+        valstring = valstring + " Cl " + str(self.cl_arr[-1])
+        valstring = valstring + " X " + str(self.x_arr[-1])
+        valstring = valstring + " Vm: " + str(self.v_arr[-1])
+        valstring = valstring + " Volume: " + str(self.w_arr[-1])
+
+        return valstring

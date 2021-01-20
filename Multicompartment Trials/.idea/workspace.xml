@@ -14,6 +14,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Python Script" />
+        <option value="Jupyter Notebook" />
       </list>
     </option>
   </component>
@@ -46,7 +47,7 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/simulator.py" />
     <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
   </component>
-  <component name="RunManager" selected="Python.Simulator">
+  <component name="RunManager" selected="Python.Jupyter notebook">
     <configuration name="Jupyter notebook" type="PythonConfigurationType" factoryName="Python">
       <module name="Multicompartment Trials" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -153,6 +154,8 @@
       <workItem from="1610808625357" duration="8762000" />
       <workItem from="1610822920669" duration="198000" />
       <workItem from="1610871599877" duration="4250000" />
+      <workItem from="1611159850558" duration="14000" />
+      <workItem from="1611159934379" duration="2088000" />
     </task>
     <servers />
   </component>

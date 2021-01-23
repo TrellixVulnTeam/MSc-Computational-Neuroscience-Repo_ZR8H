@@ -36,14 +36,14 @@ class Compartment():
         self.p = p
 
 
-    def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, z_i=-0.85, g_x=0e-9):
+    def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i = 154.962e-3, z_i=-0.85, g_x=0e-9):
 
         # A) Intracellular ion properties:
         self.na_i = na_i
         self.k_i = k_i
         self.cl_i = cl_i
         self.z_i = z_i
-        self.x_i = 154.962e-3
+        self.x_i = x_i
 
         """if cl_i == 0:
             # setting chloride that is osmo- and electro-neutral initially.

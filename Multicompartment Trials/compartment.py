@@ -5,8 +5,11 @@ Created on Sat Jan  2 17:45:32 2021
 @author: eshor
 
 
+
 """
 import numpy as np
+from simulator import comp_arr
+
 
 # import copy -- WTF is that
 from common import default_radius, default_length, default_p, default_Cm, \
@@ -31,6 +34,7 @@ class Compartment():
         self.FinvCAr = F / (self.C * self.ar)
         self.p_kcc2 = pkcc2
         self.p = p
+        comp_arr.append()
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, z_i=-0.85, g_x=0e-9):
 

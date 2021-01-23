@@ -15,11 +15,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+global comp_arr
 
 dt = 1e-3  # 1ms time steps
 total_t = 1200  # s
 run_t = 0  # current simulation timing
 t_arr = []
+
+comp_arr =[]
 
 
 

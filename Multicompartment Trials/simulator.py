@@ -27,9 +27,13 @@ comp_arr =[]
 
 
 comp_1 = compartment.Compartment("comp_1")
+comp_arr.append(comp_1)
 comp_1.set_ion_properties()
 comp_2 = compartment.Compartment("comp_2")
+comp_arr.append(comp_2)
+
 comp_2.set_ion_properties()
+
 ed_1_2 = electrodiffusion.Electrodiffusion(comp_1, comp_2)
 
 while run_t < total_t:

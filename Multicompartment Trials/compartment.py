@@ -34,6 +34,10 @@ class Compartment():
         self.FinvCAr = F / (self.C * self.ar)
         self.p_kcc2 = pkcc2
         self.p = p
+        self.V=0
+        self.E_cl=0
+        self.E_k=0
+
 
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i = 154.962e-3, z_i=-0.85, g_x=0e-9):
@@ -198,3 +202,10 @@ class Compartment():
         valstring = valstring + " Volume: " + str(self.w_arr[-1])
 
         return valstring
+
+    def get_df_array(self):
+        df_arr = [self.radius,self.length,self.w,self.na_i,self.k_i,self.cl_i,self.x_i,self.z_i,self.V,self.E_k,self.E_cl,self.p,self.p_kcc2]
+        return df_arr
+
+
+

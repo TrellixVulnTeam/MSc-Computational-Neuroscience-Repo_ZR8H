@@ -204,7 +204,7 @@ class Compartment():
         return valstring
 
     def get_df_array(self):
-        df_arr = [self.radius,self.length,self.w,self.na_i,self.k_i,self.cl_i,self.x_i,self.z_i,self.V,self.E_k,self.E_cl,self.p,self.p_kcc2]
+        df_arr = [self.radius,self.length,self.w,self.na_i,self.k_i,self.cl_i,self.x_i,self.z_i,self.p,self.p_kcc2,self.V,self.E_k,self.E_cl,]
         return df_arr
 
 

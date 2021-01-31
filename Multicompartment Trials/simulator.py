@@ -20,8 +20,8 @@ global comp_arr
 global df_sim
 
 df_sim = pd.DataFrame()
-df_sim.index = ['Radius', 'Length', 'Volume', 'Na_i', 'K_i', 'Cl_i', 'X_i', 'z_i', 'Vm', 'Ek', 'ECl', 'ATP pump rate',
-                'KCC2 pump rate']
+df_sim.index = ['Radius', 'Length', 'Volume', 'Na_i', 'K_i', 'Cl_i', 'X_i', 'z_i', 'ATP pump rate',
+                'KCC2 pump rate', 'Vm', 'Ek', 'ECl']
 
 dt = 1e-3  # 1ms time steps
 total_t = 1200  # s

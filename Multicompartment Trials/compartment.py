@@ -8,6 +8,7 @@ Created on Sat Jan  2 17:45:32 2021
 
 """
 import numpy as np
+import pandas as pd
 
 
 
@@ -37,8 +38,11 @@ class Compartment():
         self.V=0
         self.E_cl=0
         self.E_k=0
-
-
+        self.na_i=0
+        self.k_i =0
+        self.cl_i=0
+        self.x_i=0
+        self.z_i=0
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i = 154.962e-3, z_i=-0.85, g_x=0e-9):
 
@@ -180,12 +184,17 @@ class Compartment():
         self.osm_i_arr.append(self.osm_i)
         self.osm_o_arr.append(self.osm_o)
 
-    def ed_update(self, ed_change: dict):
-
-        self.na_i += ed_change["na"]
-        self.cl_i += ed_change["cl"]
-        self.k_i += ed_change["k"]
-        self.x_i += ed_change["x"]
+    def ed_update(self, ed_change: dict, sign="positive"):
+        if sign == "positive":
+            self.na_i += ed_change["na"]
+            self.cl_i += ed_change["cl"]
+            self.k_i += ed_change["k"]
+            self.x_i += ed_change["x"]
+        elif sign == "negative":
+            self.na_i -= ed_change["na"]
+            self.cl_i -= ed_change["cl"]
+            self.k_i -= ed_change["k"]
+            self.x_i -= ed_change["x"]
 
     def get_ed_dict(self):
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}

@@ -84,6 +84,7 @@ while run_t < total_t:
 
     for d in range(len(comp_arr)):
         comp_arr[d].update_volumes() #updates of the volumes, arrays, and dataframe for each compartment
+        comp_arr[d].update_arrays()
         df_sim[comp_arr[d].name] = comp_arr[d].get_df_array()
 
 

@@ -12,30 +12,33 @@ Input can be dataframe or arrays.
 @author: E Shorer
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+
+
 class graph(object):
 
-    def __init__(self,time_arr):
-
-        self.fig,self.axes = plt.subplots()
-        self.t_arr = time_arr
+    def __init__(self, Title = ''):
+        self.title = Title
+        self.fig, self.axes = plt.subplots()
+        self.x_arr = []
+        self.y_arr = []
         self.graph_form = {}
 
-    def final_vals(self,dataframe):
+    def final_vals(self, dataframe):
         self.df = dataframe
 
-    def set_x_axis(self,x_arr,x_title="x axis"):
+    def set_x_axis(self, x_arr, x_title="x axis"):
         self.x_arr = x_arr
         self.x_title = x_title
 
-    def set_y_axis(self,y_arr,y_title ="y axis"):
+    def set_y_axis(self, y_arr, y_title="y axis"):
         self.y_arr = y_arr
         self.y_title = y_title
 
-    def draw(self,x_arr,y_arr,z_arr =0,graph_form=0):
-        plt.plot(x_arr,y_arr)
+    def plot_it(self):
+        sns.despine()
+        plt.plot(self.x_arr, self.y_arr)

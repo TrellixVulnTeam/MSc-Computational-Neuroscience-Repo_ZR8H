@@ -4,7 +4,7 @@ Created on Sat Jan  2 17:45:32 2021
 
 @author: eshor
 
-testing testing 123
+
 
 """
 import numpy as np
@@ -18,23 +18,24 @@ from common import default_radius, default_length, default_p, default_Cm, \
 from constants import F
 
 
-
 class Compartment():
 
-    def __init__(self, compartment_name, radius=default_radius, length=default_length, Cm=default_Cm, pkcc2=2e-3 / F,
-                 p=default_p):
+
+    def __init__(self, compartment_name, radius=5e-5, length=10e-5, Cm=2e-4, pkcc2=2e-3 / F,
+                 p=0.1):
         self.name = compartment_name
         self.radius = radius  # in dm
         self.length = length  # in dm
+
         self.w = np.pi * (self.radius ** 2) * self.length
         self.w_temp = self.w
         self.sa = 2 * np.pi * self.radius * self.length
-        self.ar = self.sa / self.w
+        self.ar = self.sa/self.w
         self.C = Cm
         self.FinvCAr = F / (self.C * self.ar)
         self.p_kcc2 = pkcc2
-        self.p = p
-        self.V = 0
+        self.p = (10**p)/F
+        self.v = 0
         self.E_cl = 0
         self.E_k = 0
         self.na_i = 0
@@ -62,7 +63,7 @@ class Compartment():
       else:
             self.x_i = (self.cl_i - self.k_i - self.na_i) / self.z_i """
 
-        self.g_x = g_x  # basically 0 ... therefore impermeant
+        self.g_x = g_x/F  # basically 0 ... therefore impermeant
         self.g_na = gna
         self.g_k = gk
         self.g_cl = gcl
@@ -112,25 +113,21 @@ class Compartment():
         """
 
         self.dt = dt
-        self.d_na_i =0
-        self.d_k_i =0
-        self.d_cl_i=0
-        self.d_x_i=0
+        self.d_na_i = 0
+        self.d_k_i = 0
+        self.d_cl_i = 0
+        self.d_x_i = 0
 
         # 1) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
 
-
-        if self.cl_i<0:
+        if self.cl_i < 0:
             print("Cl_i = " + str(self.cl_i))
             print("d_Cl_i = " + str(self.d_cl_arr[-1]))
             raise Exception("chloride log can't have a negative number")
 
-
-        self.E_k = -1 * RTF * np.log10(self.k_i / self.k_o)
-        self.E_cl = RTF * np.log10(self.cl_i / self.cl_o)
-
-
+        self.E_k = -1 * RTF * np.log(self.k_i / self.k_o)
+        self.E_cl = RTF * np.log(self.cl_i / self.cl_o)
 
         # 2) Update ATPase and KCC2 pump rate
         self.j_p = self.p * (self.na_i / nao) ** 3
@@ -139,12 +136,12 @@ class Compartment():
         # 3) Solve ion flux equations for t+dt from t
 
         self.d_na_i = - self.dt * self.ar * (
-                    self.g_na * (self.v + RTF * np.log10(self.na_i / self.na_o)) + 3 * self.j_p)
+                self.g_na * (self.v + RTF * np.log(self.na_i / self.na_o)) + 3 * self.j_p)
 
         self.d_k_i = - self.dt * self.ar * (
-                    self.g_k * (self.v + RTF * np.log10(self.k_i / self.k_o)) - 2 * self.j_p - self.j_kcc2)
+                self.g_k * (self.v + RTF * np.log(self.k_i / self.k_o)) - 2 * self.j_p - self.j_kcc2)
 
-        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log10(self.cl_o / self.cl_i)) + self.j_kcc2)
+        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
         self.na_i = self.na_i + self.d_na_i
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
@@ -159,7 +156,10 @@ class Compartment():
         Elongation should occur length ways not radially
         '''
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-        self.dw = self.dt * pw * vw * self.sa * (self.osm_i - self.osm_o)
+        self.radius = np.sqrt(self.w / (np.pi * self.length))
+        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
+
+        self.dw = self.dt * 0.018 * 0.018 * self.sa * (self.osm_i - self.osm_o)
         self.w2 = self.w + self.dw
 
         self.na_i = self.na_i * self.w / self.w2
@@ -170,8 +170,7 @@ class Compartment():
         self.w = self.w2
 
         # self.length = self.w / (np.pi * self.radius ** 2)
-        self.radius = np.sqrt(self.w / (np.pi * self.length))
-        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
+
 
         self.ar = self.sa / self.w
         self.FinvCAr = F / (self.C * self.ar)
@@ -186,7 +185,7 @@ class Compartment():
         self.x_arr.append(self.x_i * 1000)
         self.w_arr.append(self.w * (10 ** 12))
         self.ar_arr.append(self.ar)
-        self.v_arr.append(self.v * 1000)
+        self.v_arr.append(self.v*1000)
         self.d_na_arr.append(self.d_na_i)
         self.d_k_arr.append(self.d_k_i)
         self.d_cl_arr.append(self.d_cl_i)
@@ -226,5 +225,5 @@ class Compartment():
 
     def get_df_array(self):
         df_arr = [self.radius, self.length, self.w, self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i, self.p,
-                  self.p_kcc2, self.V, self.E_k, self.E_cl, ]
+                  self.p_kcc2, self.v, self.E_k, self.E_cl, ]
         return df_arr

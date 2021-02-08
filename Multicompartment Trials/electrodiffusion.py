@@ -58,6 +58,8 @@ class Electrodiffusion:
         """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector
 
         * Note that the flux between compartment a to b = flux from b to a
+        In Chris' electrodiffusion updates he divides the drift by 2 ... Not too sure why?
+
         """
 
         self.ed_change = {"na": 0, "k": 0, "cl": 0, "x": 0}
@@ -67,7 +69,7 @@ class Electrodiffusion:
 
         for i in range(4):
             ion = ions[i]
-            self.ed_change[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)
+            self.ed_change[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)/2
             self.ed_change[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
             self.ed_change[ion] *= dt
         return self.ed_change

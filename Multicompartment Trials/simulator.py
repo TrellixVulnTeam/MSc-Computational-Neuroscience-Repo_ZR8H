@@ -24,7 +24,7 @@ global df_sim
 df_sim = pd.DataFrame()
 
 dt = 1e-3  # 1ms time steps
-total_t = 120  # s
+total_t = 300  # s
 run_t = 0  # current simulation timing
 t_arr = []
 
@@ -38,7 +38,7 @@ ed_conc_changes_arr = []
 # example of how this simulation should be run
 comp_1 = compartment.Compartment("comp_1")
 comp_arr.append(comp_1)
-comp_1.set_ion_properties(x_i=190e-3)
+comp_1.set_ion_properties(x_i=250e-3,na_i=120e-3)
 df_sim[comp_1.name] = comp_1.get_df_array()
 
 comp_2 = compartment.Compartment("comp_2")
@@ -121,24 +121,33 @@ while run_t < total_t:
 
 
 
-#fig_vm, (a1, a2, a3) = plt.subplots(1, 3, sharey=True, sharex=True)
+fig_vm, (a1, a2, a3) = plt.subplots(1, 3,sharey=True)
+plt.xlabel("Time (s)")
+plt.ylabel("Voltage (mV)")
+a1.set_title("Comp 1")
+a2.set_title("Comp 2")
+a3.set_title("Comp 3")
 
-#a2.plot(t_arr[2:], comp_2.v_arr[2:])
-#a3.plot(t_arr[2:], comp_3.v_arr[2:])
+a1.plot(t_arr[45000:-1], comp_1.v_arr[45000:-1])
+a2.plot(t_arr[45000:-1], comp_2.v_arr[45000:-1])
+a3.plot(t_arr[45000:-1], comp_3.v_arr[45000:-1])
+sns.despine()
 
-#fig_test, a = plt.subplots()
 
+fig_cl, (b1, b2, b3) = plt.subplots(1, 3, sharey=True)
+plt.xlabel("Time (s)")
+plt.ylabel("Intracellular Chloride (mM)")
+b1.set_title("Comp 1")
+b2.set_title("Comp 2")
+b3.set_title("Comp 3")
 
-print(comp_1.v_arr[0:5])
-plt.plot(t_arr, comp_1.v_arr)
-plt.show()
+b1.plot(t_arr[45000:-1], comp_1.cl_arr[45000:-1])
+b2.plot(t_arr[45000:-1], comp_2.cl_arr[45000:-1])
+b3.plot(t_arr[45000:-1], comp_3.cl_arr[45000:-1])
+sns.despine()
 
-#fig_test.show()
+fig_vm.show()
+fig_cl.show()
 
 print(df_sim)
-
-#plt.plot(t_arr, comp_1.v_arr)
-#plt.show()
-#print(df_sim)
-#print(comp_1.get_fin_vals())
-#print(comp_3.get_fin_vals())
+print(comp_1.v_arr[0:50])

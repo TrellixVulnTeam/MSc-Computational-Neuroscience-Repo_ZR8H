@@ -17,6 +17,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 import seaborn as sns
+import graphing as gr
 
 global comp_arr
 global df_sim
@@ -24,7 +25,7 @@ global df_sim
 df_sim = pd.DataFrame()
 
 dt = 1e-3  # 1ms time steps
-total_t = 300  # s
+total_t = 80  # s
 run_t = 0  # current simulation timing
 t_arr = []
 
@@ -38,7 +39,7 @@ ed_conc_changes_arr = []
 # example of how this simulation should be run
 comp_1 = compartment.Compartment("comp_1")
 comp_arr.append(comp_1)
-comp_1.set_ion_properties(x_i=250e-3,na_i=120e-3)
+comp_1.set_ion_properties(x_i=250e-3)
 df_sim[comp_1.name] = comp_1.get_df_array()
 
 comp_2 = compartment.Compartment("comp_2")
@@ -107,20 +108,21 @@ while run_t < total_t:
         t_arr.append(run_t)
     run_t += dt
 
-    # comp_1_ed_dict = comp_1.get_ed_dict()
-    # comp_2_ed_dict = comp_2.get_ed_dict()
-    # ed_conc_changes = ed_1_2.calc_ed(dt, comp_1_ed_dict, comp_2_ed_dict)
-    # comp_1.ed_update(ed_conc_changes)
-    # for j in ed_conc_changes:
-    # ed_conc_changes[j] *= -1
-    # comp_2.ed_update(ed_conc_changes)
-    # comp_1.update_volumes()
-    # comp_1.update_arrays()
-    # comp_2.update_volumes()
-    # comp_2.update_arrays()
+def get_vm_dict():
+    vm_dict ={}
+    for x in range(len(comp_arr)):
+       vm_dict[comp_arr[x].name] = comp_arr[x].v_arr
+    return vm_dict
 
 
+vm_dict = get_vm_dict()
+g1 = gr.graph(start_time=20)
+fig1,ax1 = g1.graph_time_vm_allcomps(vm_dict,t_arr)
+sns.despine()
+fig1.show()
 
+
+"""
 fig_vm, (a1, a2, a3) = plt.subplots(1, 3,sharey=True)
 plt.xlabel("Time (s)")
 plt.ylabel("Voltage (mV)")
@@ -151,3 +153,4 @@ fig_cl.show()
 
 print(df_sim)
 print(comp_1.v_arr[0:50])
+"""

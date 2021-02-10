@@ -53,6 +53,13 @@ class Compartment():
         self.z_i = z_i
         self.x_i = x_i
 
+        """Impermeant anion/Sodium Ramp to ensure electroneutrality at the beginning of simulations"""
+        if self.x_i*self.z_i<=-140e-3: #-140 is a value chosen for when the ramp should be activated based on when system was crashing based on too much impermeants.
+            self.diff = (self.x_i*self.z_i)+140e-3
+            self.na_ramp = self.diff*-1  #Adding some extra intracellular sodium to the compartment to offset the change of impermeants
+            self.na_i += self.na_ramp
+
+
         """if cl_i == 0:
             # setting chloride that is osmo- and electro-neutral initially.
             self.cl_i = (oso + (self.na_i + self.k_i) * (1 / self.z_i - 1)) / (1 + self.z_i)

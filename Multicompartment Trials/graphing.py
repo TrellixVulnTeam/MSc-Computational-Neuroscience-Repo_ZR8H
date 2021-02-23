@@ -26,6 +26,7 @@ nacolor='#e7298a'
 wcolor='k'
 
 
+
 class graph(object):
 
     def __init__(self, _title = '', num_bins=200, start_time=45):
@@ -93,3 +94,4 @@ class graph(object):
 
         plt.plot(self.x_arr, self.y_arr,)
         sns.despine()
+

@@ -24,10 +24,15 @@ class Electrodiffusion:
         d_ion is a dictionary in the form {'ion': Diffusion coefficient} e.g. {'na':1.33e-7}
         """
         
-        self.name = comp_a.name +  ' -> ' + comp_b.name
+        self.name = comp_a.name +  ' <-> ' + comp_b.name
         self.comp_a = comp_a
         self.comp_b = comp_b
         self.dx =self.comp_a.length/2 + self.comp_b.length/2
+        self.bound_na_arr = [] #arr of the various changes occuring at the boundary
+        self.bound_k_arr = []
+        self.bound_cl_arr = []
+        self.bound_x_arr = []
+
 
 
         
@@ -72,4 +77,21 @@ class Electrodiffusion:
             self.ed_change[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)/2
             self.ed_change[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
             self.ed_change[ion] *= dt
+
+        self.bound_na_arr.append(self.ed_change["na"]*1000)
+        self.bound_k_arr.append(self.ed_change["k"]*1000)
+        self.bound_cl_arr.append(self.ed_change["cl"]*1000)
+        self.bound_x_arr.append(self.ed_change["x"]*1000)
+
         return self.ed_change
+
+    def get_bound_arr(self,ion=""):
+
+        if ion == "na":
+            return self.bound_na_arr
+        elif ion == "k":
+            return self.bound_k_arr
+        elif ion == "cl":
+            return self.bound_cl_arr
+        elif ion == "x":
+            return self.bound_x_arr

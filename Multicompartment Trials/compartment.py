@@ -193,14 +193,14 @@ class Compartment():
         self.w_arr.append(self.w * (10 ** 12))
         self.ar_arr.append(self.ar)
         self.v_arr.append(self.v*1000)
-        self.d_na_arr.append(self.d_na_i)
-        self.d_k_arr.append(self.d_k_i)
-        self.d_cl_arr.append(self.d_cl_i)
-        self.d_w_arr.append(self.dw)
-        self.E_k_arr.append(self.E_k)
-        self.E_cl_arr.append(self.E_cl)
-        self.osm_i_arr.append(self.osm_i)
-        self.osm_o_arr.append(self.osm_o)
+        self.d_na_arr.append(self.d_na_i*1000)
+        self.d_k_arr.append(self.d_k_i*1000)
+        self.d_cl_arr.append(self.d_cl_i*1000)
+        self.d_w_arr.append(self.dw*1000)
+        self.E_k_arr.append(self.E_k*1000)
+        self.E_cl_arr.append(self.E_cl*1000)
+        self.osm_i_arr.append(self.osm_i*1000)
+        self.osm_o_arr.append(self.osm_o*1000)
 
     def ed_update(self, ed_change: dict, sign="positive"):
         if sign == "positive":

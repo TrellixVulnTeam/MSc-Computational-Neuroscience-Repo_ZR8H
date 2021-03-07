@@ -37,6 +37,7 @@ ed_conc_changes_arr = []
 # print(df_sim)
 
 # example of how this simulation should be run
+
 comp_1 = compartment.Compartment("comp_1")
 comp_arr.append(comp_1)
 comp_1.set_ion_properties(x_i=250e-3)

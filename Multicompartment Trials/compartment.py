@@ -22,11 +22,12 @@ class Compartment():
 
 
     def __init__(self, compartment_name, radius=5e-5, length=10e-5, Cm=2e-4, pkcc2=2e-3 / F,
-                 p=0.1):
+                 p=1):
         self.name = compartment_name
         self.radius = radius  # in dm
         self.length = length  # in dm
-
+        self.vw = vw
+        self.pw = pw
         self.w = np.pi * (self.radius ** 2) * self.length
         self.w_temp = self.w
         self.sa = 2 * np.pi * self.radius * self.length
@@ -163,10 +164,10 @@ class Compartment():
         Elongation should occur length ways not radially
         '''
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-        self.radius = np.sqrt(self.w / (np.pi * self.length))
-        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
 
-        self.dw = self.dt * 0.018 * 0.018 * self.sa * (self.osm_i - self.osm_o)
+
+
+        self.dw = self.dt * (self.vw * self.pw * self.sa * (self.osm_i - self.osm_o))
         self.w2 = self.w + self.dw
 
         self.na_i = self.na_i * self.w / self.w2
@@ -177,8 +178,8 @@ class Compartment():
         self.w = self.w2
 
         # self.length = self.w / (np.pi * self.radius ** 2)
-
-
+        self.radius = np.sqrt(self.w / (np.pi * self.length))
+        self.sa = 2 * (np.pi) * (self.radius) * (self.length)
         self.ar = self.sa / self.w
         self.FinvCAr = F / (self.C * self.ar)
 

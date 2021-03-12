@@ -67,10 +67,11 @@ class Compartment:
         self.j_kcc2 = 0
         self.p = (10**p)/F
         self.j_p = 0
+        self.constant_j_p_rate = 1.1788853299370232e-09 * 3 #steady state value of model multiplied by 3 to speed simulation up
         self.v = 0
         self.E_cl = 0
         self.E_k = 0
-
+        self.drivingf_cl = 0
 
         self.na_i = 0
         self.k_i = 0
@@ -110,10 +111,12 @@ class Compartment:
         self.d_na_arr = []
         self.d_k_arr = []
         self.d_cl_arr = []
+        self.j_p_arr = []
         self.v_arr = []
         self.d_w_arr = []
         self.E_k_arr = []
         self.E_cl_arr = []
+        self.drivingf_cl_arr =[]
         self.w_arr = []
         self.ar_arr = []
         self.osm_i_arr = []
@@ -169,7 +172,7 @@ class Compartment:
 
 
 
-    def step(self, dt=1e-3):
+    def step(self, dt=1e-3, constant_j_atp = False):
         """
         Perform a time step for the specific compartment.
         1)  Reset deltas to zero
@@ -196,9 +199,14 @@ class Compartment:
 
         self.E_k = -1 * RTF * np.log(self.k_i / self.k_o)
         self.E_cl = RTF * np.log(self.cl_i / self.cl_o)
+        self.drivingf_cl = self.v - self.E_cl
 
         # 3) Update ATPase and KCC2 pump rate
-        self.j_p = self.p * (self.na_i / nao) ** 3
+        if constant_j_atp == False:
+            self.j_p = self.p * (self.na_i / nao) ** 3
+        elif constant_j_atp == True:
+            self.j_p = self.constant_j_p_rate
+
         self.j_kcc2 = self.p_kcc2 * (self.E_k - self.E_cl)
 
         # 4) Solve ion flux equations for t+dt from t
@@ -254,9 +262,11 @@ class Compartment:
         self.d_na_arr.append(self.d_na_i*1000)
         self.d_k_arr.append(self.d_k_i*1000)
         self.d_cl_arr.append(self.d_cl_i*1000)
+        self.j_p_arr.append(self.j_p)
         self.d_w_arr.append(self.dw*1000)
         self.E_k_arr.append(self.E_k*1000)
         self.E_cl_arr.append(self.E_cl*1000)
+        self.drivingf_cl_arr.append(self.drivingf_cl*1000)
         self.osm_i_arr.append(self.osm_i*1000)
         self.osm_o_arr.append(self.osm_o*1000)
 

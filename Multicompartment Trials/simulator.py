@@ -69,6 +69,9 @@ def multi_comp_ed_link():
 multi_comp_ed_link()
 # #
 run_t = 0
+constant_j_atp = False
+
+
 ED_ON = True
 
 while run_t < total_t:

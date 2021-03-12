@@ -40,16 +40,6 @@ from constants import F
 class Compartment:
 
 
-    def __init__(self, compartment_name, radius=5e-5, length=10e-5, cm=2e-4, pkcc2=2e-3 / F,
-                 p=1):
-        """
-        Initializing the compartment object:
-        Establish:
-        - Compartment name
-        - Dimensions
-        - Pump rates
-        Defines all relevant variables
-        """
         self.name = compartment_name
         self.radius = radius  # in dm
         self.length = length  # in dm
@@ -231,6 +221,7 @@ class Compartment:
         """
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
 
+
         self.dw = self.dt * (self.vw * self.pw * self.sa * (self.osm_i - self.osm_o))
         self.w2 = self.w + self.dw
 
@@ -241,8 +232,7 @@ class Compartment:
 
         self.w = self.w2
 
-        self.radius = np.sqrt(self.w / (np.pi * self.length))
-        self.sa = 2 * np.pi * self.radius * self.length
+
         self.ar = self.sa / self.w
         self.FinvCAr = F / (self.C * self.ar)
 

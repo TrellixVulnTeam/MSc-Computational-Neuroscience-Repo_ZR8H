@@ -37,8 +37,9 @@ from constants import F
 ##################################################################################
 # COMPARTMENT CLASS
 
-class Compartment:
+class Compartment():
 
+    def __init__(self, compartment_name, radius=5e-5, length=10e-5, cm=2e-4, pkcc2=2e-3 / F,p=-1):
 
         self.name = compartment_name
         self.radius = radius  # in dm
@@ -57,7 +58,7 @@ class Compartment:
         self.j_kcc2 = 0
         self.p = (10**p)/F
         self.j_p = 0
-        self.constant_j_p_rate = 1.1788853299370232e-09 * 3 #steady state value of model multiplied by 3 to speed simulation up
+        self.constant_j_p_rate = 1.1788853299370232e-09  #steady state value of model
         self.v = 0
         self.E_cl = 0
         self.E_k = 0
@@ -73,6 +74,9 @@ class Compartment:
         self.cl_o = 0
         self.osm_i= 0
         self.osm_o = 0
+
+        self.x_default = 154.962e-3
+        self.z_default = -0.85
 
         self.na_ramp =0
         self.diff = 0
@@ -121,7 +125,7 @@ class Compartment:
         - External ionic concentrations (based on imports)
         - Ionic conductances (based on imports)
         """
-        # Intracellular ion properties:
+
 
         self.na_i = na_i
         self.k_i = k_i
@@ -129,12 +133,8 @@ class Compartment:
         self.z_i = z_i
         self.x_i = x_i
 
-        # Impermeable anion/Sodium adjustment to ensure electroneutrality at the beginning of simulations
-        if self.x_i*self.z_i<=-140e-3: #-140 is a value chosen for when the ramp should be activated based on when system was crashing based on too much impermeants.
-            self.diff = (self.x_i*self.z_i)+140e-3
-            self.na_ramp = self.diff*-1  #Adding some extra intracellular sodium to the compartment to offset the change of impermeants
-            self.na_i += self.na_ramp
-
+        self.x_start = x_i
+        self.z_start = z_i
 
         """if cl_i == 0:
             # setting chloride that is osmo- and electro-neutral initially.
@@ -161,8 +161,21 @@ class Compartment:
         self.g_cl = gcl
 
 
+    def osmol_neutral_start(self):
+        """
+        Function to ensure that the start of the simulation is osmoneutral.
+        Therefore can't just start the simulation with large differences between positive and negative values
+        """
+        """ERAN START RAMP:
+        if self.x_i * self.z_i <= -140e-3:  # -140 is a value chosen for when the ramp should be activated based on when system was crashing based on too much impermeants.
+            self.diff = (self.x_i * self.z_i) + 140e-3
+            self.na_ramp = self.diff * -1  # Adding some extra intracellular sodium to the compartment to offset the change of impermeants
+            self.na_i += self.na_ramp"""
 
-    def step(self, dt=1e-3, constant_j_atp = False):
+        """KIRA START RAMP:"""
+        self.k_i = self.cl_i - self.z_i*self.x_i - self.na_i
+
+    def step(self, dt=1e-3, total_t=120, t=0, constant_j_atp = False):
         """
         Perform a time step for the specific compartment.
         1)  Reset deltas to zero
@@ -174,10 +187,15 @@ class Compartment:
         """
         #1) Zeroing deltas
         self.dt = dt
+        self.total_t = total_t
+        self.t = t
         self.d_na_i = 0
         self.d_k_i = 0
         self.d_cl_i = 0
         self.d_x_i = 0
+
+        #self.x_i = self.get_x_value(self.x_i,self.t,self.total_t)
+
 
         # 2) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
@@ -315,4 +333,27 @@ class Compartment:
             self.g_na = self.g_na * 10 * Excitatory_synapses
 
         return
+
+
+    def get_x_value(self, x_i_conc = 154.962e-3, t_current =0, t_total=0):
+
+        t_ramp_on = t_total/10
+        t_ramp_off= t_total/5*3
+
+        if t_current<=t_ramp_on:
+            x_value = self.x_default
+            return x_value
+
+        elif t_current >=t_ramp_off:
+            x_value = x_i_conc
+            return x_value
+
+        else:
+            time_diff = t_ramp_off - t_ramp_on
+            conc_diff = self.x_start - self.x_default
+            grad = conc_diff/time_diff
+            t_ramp = t_current - t_ramp_on
+            x_value = self.x_default + t_ramp*grad
+            return x_value
+
 

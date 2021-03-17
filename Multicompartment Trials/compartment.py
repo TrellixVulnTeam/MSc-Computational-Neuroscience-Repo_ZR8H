@@ -28,18 +28,18 @@ Methods:
 
 import numpy as np
 
-
-from common import  oso, nao, ko, clo, \
+from common import oso, nao, ko, clo, \
     gk, gna, gcl, \
     pw, vw, RTF
 from constants import F
+
 
 ##################################################################################
 # COMPARTMENT CLASS
 
 class Compartment():
 
-    def __init__(self, compartment_name, radius=5e-5, length=10e-5, cm=2e-4, pkcc2=2e-3 / F,p=-1):
+    def __init__(self, compartment_name, radius=5e-5, length=10e-5, cm=2e-4, pkcc2=2e-3 / F, p=-1):
 
         self.name = compartment_name
         self.radius = radius  # in dm
@@ -47,18 +47,18 @@ class Compartment():
         self.vw = vw
         self.pw = pw
         self.w = np.pi * (self.radius ** 2) * self.length
-        self.dw= 0
-        self.w2 =0
+        self.dw = 0
+        self.w2 = 0
         self.w_temp = self.w
         self.sa = 2 * np.pi * self.radius * self.length
-        self.ar = self.sa/self.w
+        self.ar = self.sa / self.w
         self.C = cm
         self.FinvCAr = F / (self.C * self.ar)
         self.p_kcc2 = pkcc2
         self.j_kcc2 = 0
-        self.p = (10**p)/F
+        self.p = (10 ** p) / F
         self.j_p = 0
-        self.constant_j_p_rate = 1.1788853299370232e-09  #steady state value of model
+        self.constant_j_p_rate = 1.1788853299370232e-09  # steady state value of model
         self.v = 0
         self.E_cl = 0
         self.E_k = 0
@@ -72,14 +72,16 @@ class Compartment():
         self.na_o = 0
         self.k_o = 0
         self.cl_o = 0
-        self.osm_i= 0
+        self.osm_i = 0
         self.osm_o = 0
 
         self.x_default = 154.962e-3
         self.z_default = -0.85
 
-        self.na_ramp =0
+        self.na_ramp = 0
         self.diff = 0
+
+        self.x_flux_setup = True
 
         # Zeroing Delta values
         self.d_na_i = 0
@@ -87,15 +89,15 @@ class Compartment():
         self.d_cl_i = 0
         self.d_x_i = 0
 
-        #Zeroing conductances
+        # Zeroing conductances
         self.g_x = 0  # basically 0 ... therefore impermeant
         self.g_na = 0
         self.g_k = 0
         self.g_cl = 0
 
-        self.dt =0
-        self.syn_t_off =0
-        self.syn_t_on =0
+        self.dt = 0
+        self.syn_t_off = 0
+        self.syn_t_on = 0
 
         # Zeroing arrays
         self.na_arr = []
@@ -110,13 +112,11 @@ class Compartment():
         self.d_w_arr = []
         self.E_k_arr = []
         self.E_cl_arr = []
-        self.drivingf_cl_arr =[]
+        self.drivingf_cl_arr = []
         self.w_arr = []
         self.ar_arr = []
         self.osm_i_arr = []
         self.osm_o_arr = []
-
-
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i=154.962e-3, z_i=-0.85, g_x=0e-9):
         """
@@ -125,7 +125,6 @@ class Compartment():
         - External ionic concentrations (based on imports)
         - Ionic conductances (based on imports)
         """
-
 
         self.na_i = na_i
         self.k_i = k_i
@@ -146,20 +145,17 @@ class Compartment():
            else:
             self.x_i = (self.cl_i - self.k_i - self.na_i) / self.z_i """
 
-
-
         # Extracellular ion properties:
         self.na_o = nao
         self.k_o = ko
         self.cl_o = clo
         self.osm_o = oso
 
-        #Ionic conductance
+        # Ionic conductance
         self.g_x = g_x / F  # basically 0 ... therefore impermeant
         self.g_na = gna
         self.g_k = gk
         self.g_cl = gcl
-
 
     def osmol_neutral_start(self):
         """
@@ -173,9 +169,9 @@ class Compartment():
             self.na_i += self.na_ramp"""
 
         """KIRA START RAMP:"""
-        self.k_i = self.cl_i - self.z_i*self.x_i - self.na_i
+        self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
 
-    def step(self, dt=1e-3, total_t=120, t=0, constant_j_atp = False):
+    def step(self, dt=1e-3, total_t=120, t=0, constant_j_atp=False):
         """
         Perform a time step for the specific compartment.
         1)  Reset deltas to zero
@@ -185,7 +181,7 @@ class Compartment():
         5)  Update ion concentrations
 
         """
-        #1) Zeroing deltas
+        # 1) Zeroing deltas
         self.dt = dt
         self.total_t = total_t
         self.t = t
@@ -194,7 +190,7 @@ class Compartment():
         self.d_cl_i = 0
         self.d_x_i = 0
 
-        #self.x_i = self.get_x_value(self.x_i,self.t,self.total_t)
+
 
 
         # 2) Updating voltages
@@ -232,13 +228,11 @@ class Compartment():
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
 
-
     def update_volumes(self):
         """ Calculates the new compartment volume (dm3)
         Elongation should occur radially
         """
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-
 
         self.dw = self.dt * (self.vw * self.pw * self.sa * (self.osm_i - self.osm_o))
         self.w2 = self.w + self.dw
@@ -250,11 +244,8 @@ class Compartment():
 
         self.w = self.w2
 
-
         self.ar = self.sa / self.w
         self.FinvCAr = F / (self.C * self.ar)
-
-
 
     def update_arrays(self):
         """
@@ -266,17 +257,17 @@ class Compartment():
         self.x_arr.append(self.x_i * 1000)
         self.w_arr.append(self.w * (10 ** 12))
         self.ar_arr.append(self.ar)
-        self.v_arr.append(self.v*1000)
-        self.d_na_arr.append(self.d_na_i*1000)
-        self.d_k_arr.append(self.d_k_i*1000)
-        self.d_cl_arr.append(self.d_cl_i*1000)
+        self.v_arr.append(self.v * 1000)
+        self.d_na_arr.append(self.d_na_i * 1000)
+        self.d_k_arr.append(self.d_k_i * 1000)
+        self.d_cl_arr.append(self.d_cl_i * 1000)
         self.j_p_arr.append(self.j_p)
-        self.d_w_arr.append(self.dw*1000)
-        self.E_k_arr.append(self.E_k*1000)
-        self.E_cl_arr.append(self.E_cl*1000)
-        self.drivingf_cl_arr.append(self.drivingf_cl*1000)
-        self.osm_i_arr.append(self.osm_i*1000)
-        self.osm_o_arr.append(self.osm_o*1000)
+        self.d_w_arr.append(self.dw * 1000)
+        self.E_k_arr.append(self.E_k * 1000)
+        self.E_cl_arr.append(self.E_cl * 1000)
+        self.drivingf_cl_arr.append(self.drivingf_cl * 1000)
+        self.osm_i_arr.append(self.osm_i * 1000)
+        self.osm_o_arr.append(self.osm_o * 1000)
 
     def ed_update(self, ed_change: dict, sign="positive"):
         """
@@ -314,7 +305,7 @@ class Compartment():
                   self.p_kcc2, self.v, self.E_k, self.E_cl, ]
         return df_arr
 
-    def add_synapse(self,syn_t_on= 0, syn_t_off = 0, Inhibitory_synapses = 0, Excitatory_synapses = 0, Ramp =True):
+    def add_synapse(self, syn_t_on=0, syn_t_off=0, Inhibitory_synapses=0, Excitatory_synapses=0, Ramp=True):
         """
         Set time synapse is turned on and off
         Inhibitory_synapses = number of inhibitory synapses onto compartment.
@@ -334,26 +325,45 @@ class Compartment():
 
         return
 
+    def x_flux(self, start_t=0, end_t=50, x_conc=150e-3, z=-0.85):
 
-    def get_x_value(self, x_i_conc = 154.962e-3, t_current =0, t_total=0):
+        if self.x_flux_setup:
+            current_xz = self.x_i * self.z_i
+            flux_xz = x_conc * z
+            final_xz = current_xz + flux_xz
+            final_x = self.x_i + x_conc
+            final_z = final_xz / final_x
+            z_diff = final_z - self.z_i
+            x_diff = final_x - self.x_i
+            t_diff = end_t - start_t
+            self.z_inc = z_diff / t_diff
+            self.x_inc =  x_diff / t_diff
 
-        t_ramp_on = t_total/10
-        t_ramp_off= t_total/5*3
+        if start_t <= self.t <= end_t:
+            self.x_i += self.x_inc
+            self.z_i += self.z_inc
+            self.x_flux_setup = False
+            return
+        else:
+            return
 
-        if t_current<=t_ramp_on:
+    def get_x_value(self, x_i_conc=154.962e-3, t_current=0, t_total=0):
+
+        t_ramp_on = t_total / 10
+        t_ramp_off = t_total / 5 * 3
+
+        if t_current <= t_ramp_on:
             x_value = self.x_default
             return x_value
 
-        elif t_current >=t_ramp_off:
+        elif t_current >= t_ramp_off:
             x_value = x_i_conc
             return x_value
 
         else:
             time_diff = t_ramp_off - t_ramp_on
             conc_diff = self.x_start - self.x_default
-            grad = conc_diff/time_diff
+            grad = conc_diff / time_diff
             t_ramp = t_current - t_ramp_on
-            x_value = self.x_default + t_ramp*grad
+            x_value = self.x_default + t_ramp * grad
             return x_value
-
-

@@ -84,6 +84,7 @@ while run_t < total_t:
 
         for a in range(len(comp_arr)):
             comp_arr[a].step(dt)  # step for each compartment
+            comp_arr[a].x_flux()
             ed_dict_arr.append(comp_arr[a].get_ed_dict())  # electrodiffusion dictionary for each compartment
 
         for b in range(len(comp_arr) - 1):
@@ -104,6 +105,7 @@ while run_t < total_t:
     else: # if you want to run with normal diffusion not ED
         for a in range(len(comp_arr)):
             comp_arr[a].step(dt)
+            comp_arr[a].x_flux()
             comp_arr[a].update_volumes()  # updates of the volumes, arrays, and dataframe for each compartment
             comp_arr[a].update_arrays()
             df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()

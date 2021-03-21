@@ -104,6 +104,7 @@ class Compartment():
         self.k_arr = []
         self.cl_arr = []
         self.x_arr = []
+        self.z_arr = []
         self.d_na_arr = []
         self.d_k_arr = []
         self.d_cl_arr = []
@@ -190,9 +191,6 @@ class Compartment():
         self.d_cl_i = 0
         self.d_x_i = 0
 
-
-
-
         # 2) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
 
@@ -255,6 +253,7 @@ class Compartment():
         self.k_arr.append(self.k_i * 1000)
         self.cl_arr.append(self.cl_i * 1000)
         self.x_arr.append(self.x_i * 1000)
+        self.z_arr.append(self.z_i)
         self.w_arr.append(self.w * (10 ** 12))
         self.ar_arr.append(self.ar)
         self.v_arr.append(self.v * 1000)
@@ -325,25 +324,41 @@ class Compartment():
 
         return
 
-    def x_flux(self, start_t=0, end_t=50, x_conc=150e-3, z=-0.85):
+    def x_flux(self, run_t=0, start_t=0, end_t=50, x_conc=150e-3, z=-0.85):
+        """
 
-        if self.x_flux_setup:
-            current_xz = self.x_i * self.z_i
-            flux_xz = x_conc * z
-            final_xz = current_xz + flux_xz
-            final_x = self.x_i + x_conc
-            final_z = final_xz / final_x
-            z_diff = final_z - self.z_i
-            x_diff = final_x - self.x_i
-            t_diff = end_t - start_t
-            self.z_inc = z_diff / t_diff
-            self.x_inc =  x_diff / t_diff
+        :param start_t:  Start time to impermeant flux
+        :param end_t:  End time of impermeant fulx
+        :param x_conc: Concentration of impermenat to add to the model
+        :param z: charge of impermeant to add to the model
+        :return:
+        """
+
+        if start_t <= run_t <= end_t:
+
+            t_diff = (end_t - start_t) / self.dt
+            x_inc = x_conc / t_diff
+            self.z_i = (self.x_i * self.z_i + (x_inc * z)) / (self.x_i + x_inc)
+            self.x_i += x_inc
+
+        else:
+            return
+
+    def z_flux(self, start_t=0, end_t=50, z=-0.85):
+        """
+
+        :param start_t:  Start time to impermeant flux
+        :param end_t:  End time of impermeant fulx
+        :param z: charge of impermeant to add to the model
+        :return:
+        """
 
         if start_t <= self.t <= end_t:
-            self.x_i += self.x_inc
-            self.z_i += self.z_inc
-            self.x_flux_setup = False
-            return
+
+            t_diff = (end_t - start_t) / self.dt
+
+            z_inc = z / t_diff
+            self.z_i += z_inc
         else:
             return
 

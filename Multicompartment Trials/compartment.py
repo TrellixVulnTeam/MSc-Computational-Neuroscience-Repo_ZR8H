@@ -82,6 +82,8 @@ class Compartment():
         self.diff = 0
 
         self.x_flux_setup = True
+        self.x_flux_switch = False #if this x-flux will occur as specified
+        self.z_flux_switch = False
 
         # Zeroing Delta values
         self.d_na_i = 0
@@ -333,6 +335,8 @@ class Compartment():
         :param z: charge of impermeant to add to the model
         :return:
         """
+        if not self.x_flux_switch:
+            return
 
         if start_t <= run_t <= end_t:
 
@@ -352,6 +356,8 @@ class Compartment():
         :param z: charge of impermeant to add to the model
         :return:
         """
+        if not self.z_flux_switch:
+            return
 
         if start_t <= self.t <= end_t:
 

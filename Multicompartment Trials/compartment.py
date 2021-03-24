@@ -82,6 +82,7 @@ class Compartment():
         self.diff = 0
 
         self.x_flux_setup = True
+
         self.x_flux_switch = False #if this x-flux will occur as specified
         self.z_flux_switch = False
 
@@ -326,7 +327,7 @@ class Compartment():
 
         return
 
-    def x_flux(self, run_t=0, start_t=0, end_t=50, x_conc=150e-3, z=-0.85):
+    def x_flux(self, run_t=0, start_t=0, end_t=50, x_conc=1e-3, z=-0.85):
         """
 
         :param start_t:  Start time to impermeant flux
@@ -340,10 +341,15 @@ class Compartment():
 
         if start_t <= run_t <= end_t:
 
-            t_diff = (end_t - start_t) / self.dt
-            x_inc = x_conc / t_diff
-            self.z_i = (self.x_i * self.z_i + (x_inc * z)) / (self.x_i + x_inc)
+            if self.x_flux_setup:
+                #starting values for flux
+                self.x_final = self.x_i + x_conc
+                self.t_diff = (end_t - start_t) / self.dt
+
+            self.x_flux_setup = False
+            x_inc = ((self.x_final - self.x_i) / self.t_diff)*100
             self.x_i += x_inc
+            self.z_i = (self.x_i * self.z_i + (x_inc * z)) / (self.x_i + x_inc)
 
         else:
             return

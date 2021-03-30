@@ -28,8 +28,8 @@ Methods:
 
 import numpy as np
 
-from common import oso, nao, ko, clo, \
-    gk, gna, gcl, \
+from common import oso, nao, ko, clo, xo,\
+    gk, gna, gcl,gx, \
     pw, vw, RTF
 from constants import F
 
@@ -72,19 +72,21 @@ class Compartment():
         self.na_o = 0
         self.k_o = 0
         self.cl_o = 0
+        self.x_o =0
         self.osm_i = 0
         self.osm_o = 0
 
         self.x_default = 154.962e-3
+
         self.z_default = -0.85
 
         self.na_ramp = 0
         self.diff = 0
 
-        self.x_flux_setup = True
+        self.xflux_setup = True
 
-        self.x_flux_switch = False #if this x-flux will occur as specified
-        self.z_flux_switch = False
+        self.xflux_switch = False #if this x-flux will occur as specified
+        self.zflux_switch = False
 
         # Zeroing Delta values
         self.d_na_i = 0
@@ -121,6 +123,8 @@ class Compartment():
         self.ar_arr = []
         self.osm_i_arr = []
         self.osm_o_arr = []
+        self.xflux_arr = []
+        self.zflux_arr = []
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i=154.962e-3, z_i=-0.85, g_x=0e-9):
         """
@@ -156,10 +160,15 @@ class Compartment():
         self.osm_o = oso
 
         # Ionic conductance
-        self.g_x = g_x / F  # basically 0 ... therefore impermeant
+        self.g_x = g_x   # basically 0 ... therefore impermeant
         self.g_na = gna
         self.g_k = gk
         self.g_cl = gcl
+
+        #Temp values for anion fluxes:
+        #self.x_ratio = 0.98  # ratio used in x_flux calculations as per Kira
+        #self.x_temp_high = self.x_i(1-self.x_ratio)
+        #self.x_temp_low =self.x_i(self.x_ratio)
 
     def osmol_neutral_start(self):
         """
@@ -224,6 +233,9 @@ class Compartment():
 
         self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
 
+        #self.d_x_i = - self.dt * self.ar * self.z_i * (self.g_x *
+         #                                              (self.v - (RTF/self.z_i*np.log(self.x_o/self.x_temp))))
+
         # 5) Update ion concentrations
         self.na_i = self.na_i + self.d_na_i
         self.k_i = self.k_i + self.d_k_i
@@ -270,6 +282,7 @@ class Compartment():
         self.drivingf_cl_arr.append(self.drivingf_cl * 1000)
         self.osm_i_arr.append(self.osm_i * 1000)
         self.osm_o_arr.append(self.osm_o * 1000)
+        self.xflux_arr.append(self.xflux * 1000)
 
     def ed_update(self, ed_change: dict, sign="positive"):
         """
@@ -336,22 +349,30 @@ class Compartment():
         :param z: charge of impermeant to add to the model
         :return:
         """
-        if not self.x_flux_switch:
-            return
 
         if start_t <= run_t <= end_t:
 
-            if self.x_flux_setup:
-                #starting values for flux
-                self.x_final = self.x_i + x_conc
-                self.t_diff = (end_t - start_t) / self.dt
+            if self.xflux_setup:
 
-            self.x_flux_setup = False
-            x_inc = ((self.x_final - self.x_i) / self.t_diff)*100
-            self.x_i += x_inc
-            self.z_i = (self.x_i * self.z_i + (x_inc * z)) / (self.x_i + x_inc)
+                #starting values for flux
+                self.x_start = self.x_i
+                self.d_xflux = 0
+                self.x_final = self.x_i + x_conc
+                self.t_xflux = 0
+                self.flux_points = (end_t - start_t) * (1/self.dt)
+                self.dt_xflux = 4/self.flux_points
+                self.alpha = 1
+                self.beta = -1
+
+            if self.x_i <=self.x_final:
+                self.xflux_setup = False
+                self.d_xflux = self.alpha - np.e**(self.beta * self.t_xflux)
+                self.xflux = self.d_xflux * x_conc
+                self.x_i = self.x_start+self.xflux
+                self.t_xflux += self.dt_xflux
 
         else:
+            self.xflux = 0
             return
 
     def z_flux(self, start_t=0, end_t=50, z=-0.85):
@@ -372,6 +393,7 @@ class Compartment():
             z_inc = z / t_diff
             self.z_i += z_inc
         else:
+            z_inc = 0
             return
 
     def get_x_value(self, x_i_conc=154.962e-3, t_current=0, t_total=0):

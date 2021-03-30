@@ -12,7 +12,8 @@ RT = R * T
 # permeabilities
 gna = 2e-3/F
 gk = 7e-3/F
-gcl = 2e-3/F  # gna,gk,gcl: conductances in mS/cm^2 conv to S/dm^2 (10^-3/10^-2) - corrected for neuron
+gcl = 2e-3/F
+gx = 1e-8 # gna,gk,gcl: conductances in mS/cm^2 conv to S/dm^2 (10^-3/10^-2) - corrected for neuron
 # stochiometries
 ck = 2
 cna = 3  # cna,ck: pump (ATPase) stoichiometries

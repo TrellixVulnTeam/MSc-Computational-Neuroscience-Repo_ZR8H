@@ -84,9 +84,13 @@ class Compartment():
         self.diff = 0
 
         self.xflux_setup = True
+        self.external_xflux_setup = True
 
         self.xflux_switch = False #if this x-flux will occur as specified
         self.zflux_switch = False
+
+        self.xflux = 0
+        self.xoflux =0
 
         # Zeroing Delta values
         self.d_na_i = 0
@@ -109,6 +113,7 @@ class Compartment():
         self.k_arr = []
         self.cl_arr = []
         self.x_arr = []
+
         self.z_arr = []
         self.d_na_arr = []
         self.d_k_arr = []
@@ -125,6 +130,7 @@ class Compartment():
         self.osm_o_arr = []
         self.xflux_arr = []
         self.zflux_arr = []
+        self.xo_arr = []
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i=154.962e-3, z_i=-0.85, g_x=0e-9):
         """
@@ -157,6 +163,7 @@ class Compartment():
         self.na_o = nao
         self.k_o = ko
         self.cl_o = clo
+        self.x_o = xo
         self.osm_o = oso
 
         # Ionic conductance
@@ -283,6 +290,7 @@ class Compartment():
         self.osm_i_arr.append(self.osm_i * 1000)
         self.osm_o_arr.append(self.osm_o * 1000)
         self.xflux_arr.append(self.xflux * 1000)
+        self.xo_arr.append(self.x_o*1000)
 
     def ed_update(self, ed_change: dict, sign="positive"):
         """
@@ -342,7 +350,7 @@ class Compartment():
 
     def x_flux(self, run_t=0, start_t=0, end_t=50, x_conc=1e-3, z=-0.85):
         """
-
+        FLUX IMPERMEANTS INTO THE COMPARTMENT
         :param start_t:  Start time to impermeant flux
         :param end_t:  End time of impermeant fulx
         :param x_conc: Concentration of impermenat to add to the model
@@ -394,6 +402,35 @@ class Compartment():
             self.z_i += z_inc
         else:
             z_inc = 0
+            return
+
+    def external_xflux(self, run_t=0, start_t=0, end_t=50, xo_conc=1e-3, z=-0.85):
+        """
+        CHANGE THE FLUX OF IMPERMEANTS OUTSIDE THE COMPARTMENT
+
+        """
+        if start_t <= run_t <= end_t:
+
+            if self.external_xflux_setup:
+                # starting values for external x flux
+                self.xo_start = self.x_o
+                self.d_xoflux = 0
+                self.xo_final = self.x_o + xo_conc
+                self.t_xoflux = 0
+                self.xoflux_points = (end_t - start_t) * (1 / self.dt)
+                self.dt_xoflux = 4 / self.xoflux_points
+                self.xo_alpha = 1
+                self.xo_beta = -1
+
+            if self.x_o <= self.xo_final:
+                self.external_xflux_setup = False
+                self.d_xoflux = self.xo_alpha - np.e ** (self.xo_beta * self.t_xoflux)
+                self.xoflux = self.d_xoflux * xo_conc
+                self.x_o = self.xo_start + self.xoflux
+                self.t_xoflux += self.dt_xoflux
+
+        else:
+            self.xoflux = 0
             return
 
     def get_x_value(self, x_i_conc=154.962e-3, t_current=0, t_total=0):

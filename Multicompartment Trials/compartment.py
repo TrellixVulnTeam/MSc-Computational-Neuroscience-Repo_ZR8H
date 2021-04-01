@@ -84,6 +84,7 @@ class Compartment():
         self.diff = 0
 
         self.xflux_setup = True
+        self.zflux_setup =True
         self.external_xflux_setup = True
 
         self.xflux_switch = False #if this x-flux will occur as specified
@@ -163,8 +164,10 @@ class Compartment():
         self.na_o = nao
         self.k_o = ko
         self.cl_o = clo
-        self.x_o = xo
-        self.osm_o = oso
+        self.x_o = -1 * (self.cl_o - self.na_o - self.k_o)
+        #self.x_o = xo
+        self.osm_o = self.x_o + self.na_o + self.cl_o + self.k_o
+
 
         # Ionic conductance
         self.g_x = g_x   # basically 0 ... therefore impermeant
@@ -253,7 +256,7 @@ class Compartment():
         Elongation should occur radially
         """
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
-
+        self.osm_o = self.na_o + self.k_o + self.cl_o + self.x_o
         self.dw = self.dt * (self.vw * self.pw * self.sa * (self.osm_i - self.osm_o))
         self.w2 = self.w + self.dw
 
@@ -391,8 +394,7 @@ class Compartment():
         :param z: charge of impermeant to add to the model
         :return:
         """
-        if not self.z_flux_switch:
-            return
+
 
         if start_t <= self.t <= end_t:
 
@@ -414,6 +416,7 @@ class Compartment():
             if self.external_xflux_setup:
                 # starting values for external x flux
                 self.xo_start = self.x_o
+                self.cl_o_start = self.cl_o
                 self.d_xoflux = 0
                 self.xo_final = self.x_o + xo_conc
                 self.t_xoflux = 0
@@ -427,6 +430,7 @@ class Compartment():
                 self.d_xoflux = self.xo_alpha - np.e ** (self.xo_beta * self.t_xoflux)
                 self.xoflux = self.d_xoflux * xo_conc
                 self.x_o = self.xo_start + self.xoflux
+                self.cl_o = self.cl_o_start - self.xoflux #balancing the charges added externally
                 self.t_xoflux += self.dt_xoflux
 
         else:

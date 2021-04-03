@@ -180,6 +180,17 @@ class Compartment():
         #self.x_temp_high = self.x_i(1-self.x_ratio)
         #self.x_temp_low =self.x_i(self.x_ratio)
 
+    def set_external_ion_properties(self,na_o = 145e-3, k_o= 3.5e-3 ,cl_o = 119e-3, x_o = 29.5e-3, z_o = -0.85):
+        """
+        Capacity to change the extracellular bath properties before the simulation
+        """
+
+        self.na_o = na_o
+        self.k_o = k_o
+        self.x_o = x_o
+        self.cl_o = cl_o
+        self.z_o = z_o
+
     def osmol_neutral_start(self):
         """
         Function to ensure that the start of the simulation is osmoneutral.

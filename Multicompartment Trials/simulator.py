@@ -21,8 +21,10 @@ import graphing as gr
 
 global comp_arr
 global df_sim
+global df_start
 
 df_sim = pd.DataFrame()
+df_start =pd.DataFrame()
 
 dt = 1e-3  # 1ms time steps
 total_t = 80  # s
@@ -37,11 +39,12 @@ ed_conc_changes_arr = []
 # print(df_sim)
 
 # example of how this simulation should be run
-
+"""
 comp_1 = compartment.Compartment("comp_1")
 comp_arr.append(comp_1)
 comp_1.set_ion_properties(x_i=250e-3)
 df_sim[comp_1.name] = comp_1.get_df_array()
+df_start[comp_1.name] = comp_1.get_df_array()
 
 comp_2 = compartment.Compartment("comp_2")
 comp_arr.append(comp_2)
@@ -52,10 +55,12 @@ comp_3 = compartment.Compartment("comp_3")
 comp_arr.append(comp_3)
 comp_3.set_ion_properties(x_i=154e-3)
 df_sim[comp_3.name] = comp_3.get_df_array()
+"""
 
 df_sim.index = ['Radius', 'Length', 'Volume', 'Na_i', 'K_i', 'Cl_i', 'X_i', 'z_i', 'ATP pump rate', 'KCC2 pump rate',
                 'Vm', 'Ek', 'ECl']
-
+df_start.index = ['Radius', 'Length', 'Volume', 'Na_i', 'K_i', 'Cl_i', 'X_i', 'z_i', 'ATP pump rate', 'KCC2 pump rate',
+                'Vm', 'Ek', 'ECl']
 #print(df_sim)
 
 

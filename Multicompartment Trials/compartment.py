@@ -85,6 +85,7 @@ class Compartment():
 
         self.xflux_setup = True
         self.zflux_setup =True
+
         self.external_xflux_setup = True
 
         self.xflux_switch = False #if this x-flux will occur as specified
@@ -405,14 +406,19 @@ class Compartment():
         :param z: charge of impermeant to add to the model
         :return:
         """
+        if self.zflux_setup:
+            self.z_diff = z-self.z_i
+            #self.x_mol_start =  self.w * self.x_i
 
 
         if start_t <= self.t <= end_t:
 
             t_diff = (end_t - start_t) / self.dt
 
-            z_inc = z / t_diff
+            z_inc = self.z_diff / t_diff
             self.z_i += z_inc
+            #self.x_i = self.x_mol_start/self.w
+            self.zflux_setup = False
         else:
             z_inc = 0
             return

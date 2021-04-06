@@ -91,6 +91,7 @@ class Compartment():
         self.xflux_switch = False #if this x-flux will occur as specified
         self.zflux_switch = False
 
+
         self.xflux = 0
         self.xoflux =0
 
@@ -373,7 +374,7 @@ class Compartment():
         :return:
         """
 
-        if start_t <= run_t <= end_t:
+        if (start_t <= run_t <= end_t) and self.xflux_switch:
 
             if self.xflux_setup:
 
@@ -411,7 +412,7 @@ class Compartment():
             #self.x_mol_start =  self.w * self.x_i
 
 
-        if start_t <= self.t <= end_t:
+        if (start_t <= self.t <= end_t) and self.zflux_switch:
 
             t_diff = (end_t - start_t) / self.dt
 

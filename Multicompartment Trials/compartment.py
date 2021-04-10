@@ -97,8 +97,15 @@ class Compartment():
 
         # Zeroing Delta values
         self.d_na_i = 0
+        self.d_na_atpase = 0
+        self.d_na_leak = 0
         self.d_k_i = 0
+        self.d_k_atpase = 0
+        self.d_k_leak = 0
+        self.d_k_kcc2 =0
         self.d_cl_i = 0
+        self.d_cl_leak = 0
+        self.d_cl_kcc2 =0
         self.d_x_i = 0
 
         # Zeroing conductances
@@ -119,8 +126,17 @@ class Compartment():
 
         self.z_arr = []
         self.d_na_arr = []
+        self.d_na_leak_arr =[]
+        self.d_na_atpase_arr =[]
         self.d_k_arr = []
+        self.d_k_leak_arr = []
+        self.d_k_atpase_arr = []
+        self.d_k_kcc2_arr = []
         self.d_cl_arr = []
+        self.d_cl_leak_arr = []
+        self.d_cl_kcc2_arr = []
+
+
         self.j_p_arr = []
         self.v_arr = []
         self.d_w_arr = []
@@ -248,13 +264,25 @@ class Compartment():
 
         # 4) Solve ion flux equations for t+dt from t
 
-        self.d_na_i = - self.dt * self.ar * (
-                self.g_na * (self.v + RTF * np.log(self.na_i / self.na_o)) + 3 * self.j_p)
+        self.d_na_leak = - self.dt * self.ar * self.g_na * (self.v + RTF * np.log(self.na_i / self.na_o))
+        self.d_na_atpase =   - self.dt * self.ar * (+3 * self.j_p)
+        self.d_na_i = self.d_na_leak + self.d_na_atpase
+        #self.d_na_i = - self.dt * self.ar * (
+                #self.g_na * (self.v + RTF * np.log(self.na_i / self.na_o)) + 3 * self.j_p)
 
-        self.d_k_i = - self.dt * self.ar * (
-                self.g_k * (self.v + RTF * np.log(self.k_i / self.k_o)) - 2 * self.j_p - self.j_kcc2)
+        self.d_k_leak = - self.dt * self.ar * self.g_k * (self.v + RTF * np.log(self.k_i / self.k_o))
+        self.d_k_atpase = - self.dt * self.ar * (- 2 * self.j_p)
+        self.d_k_kcc2 = - self.dt * self.ar * (- self.j_kcc2)
+        self.d_k_i = self.d_k_leak + self.d_k_atpase + self.d_k_kcc2
+        #self.d_k_i = - self.dt * self.ar * (
+                #self.g_k * (self.v + RTF * np.log(self.k_i / self.k_o)) - 2 * self.j_p - self.j_kcc2)
 
-        self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
+        self.d_cl_leak = + self.dt * self.ar * self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i))
+        self.d_cl_kcc2 = + self.dt * self.ar * (self.j_kcc2)
+        self.d_cl_i = self.d_cl_leak + self.d_cl_kcc2
+
+
+        #self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
 
         #self.d_x_i = - self.dt * self.ar * self.z_i * (self.g_x *
          #                                              (self.v - (RTF/self.z_i*np.log(self.x_o/self.x_temp))))
@@ -291,13 +319,24 @@ class Compartment():
         self.k_arr.append(self.k_i * 1000)
         self.cl_arr.append(self.cl_i * 1000)
         self.x_arr.append(self.x_i * 1000)
+        self.d_na_arr.append(self.d_na_i * 1000)
+        self.d_na_leak_arr.append(self.d_na_leak * 1000)
+        self.d_na_atpase_arr.append(self.d_na_atpase * 1000)
+        self.d_k_arr.append(self.d_k_i * 1000)
+        self.d_k_leak_arr.append(self.d_k_leak * 1000)
+        self.d_k_atpase_arr.append(self.d_k_atpase * 1000)
+        self.d_k_kcc2_arr.append(self.d_k_kcc2 * 1000)
+        self.d_cl_arr.append(self.d_cl_i * 1000)
+        self.d_cl_leak_arr.append(self.d_cl_leak * 1000)
+        self.d_cl_kcc2_arr.append(self.d_cl_kcc2 * 1000)
+
+
+
         self.z_arr.append(self.z_i)
         self.w_arr.append(self.w * (10 ** 12))
         self.ar_arr.append(self.ar)
         self.v_arr.append(self.v * 1000)
-        self.d_na_arr.append(self.d_na_i * 1000)
-        self.d_k_arr.append(self.d_k_i * 1000)
-        self.d_cl_arr.append(self.d_cl_i * 1000)
+
         self.j_p_arr.append(self.j_p)
         self.d_w_arr.append(self.dw * 1000)
         self.E_k_arr.append(self.E_k * 1000)
@@ -307,6 +346,8 @@ class Compartment():
         self.osm_o_arr.append(self.osm_o * 1000)
         self.xflux_arr.append(self.xflux * 1000)
         self.xo_arr.append(self.x_o*1000)
+
+
 
     def ed_update(self, ed_change: dict, sign="positive"):
         """

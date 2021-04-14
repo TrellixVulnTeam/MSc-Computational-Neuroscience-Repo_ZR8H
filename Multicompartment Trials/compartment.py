@@ -54,11 +54,15 @@ class Compartment():
         self.ar = self.sa / self.w
         self.C = cm
         self.FinvCAr = F / (self.C * self.ar)
+        self.constant_ar_val = self.ar
+        self.constant_ar = False
+
         self.p_kcc2 = pkcc2
         self.j_kcc2 = 0
         self.p = (10 ** p) / F
         self.j_p = 0
         self.constant_j_p_rate = 1.1788853299370232e-09  # steady state value of model
+
         self.v = 0
         self.E_cl = 0
         self.E_k = 0
@@ -292,7 +296,7 @@ class Compartment():
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
 
-    def update_volumes(self):
+    def update_volumes(self, constant_ar=False):
         """ Calculates the new compartment volume (dm3)
         Elongation should occur radially
         """
@@ -308,7 +312,11 @@ class Compartment():
 
         self.w = self.w2
 
-        self.ar = self.sa / self.w
+        if constant_ar:
+            self.ar = self.constant_ar_val
+        else:
+            self.ar = self.sa / self.w
+
         self.FinvCAr = F / (self.C * self.ar)
 
     def update_arrays(self):

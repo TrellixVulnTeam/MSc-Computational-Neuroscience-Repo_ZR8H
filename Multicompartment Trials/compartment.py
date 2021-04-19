@@ -61,7 +61,7 @@ class Compartment():
         self.j_kcc2 = 0
         self.p = (10 ** p) / F
         self.j_p = 0
-        self.constant_j_p_rate = 1.1788853299370232e-09  # steady state value of model
+        #self.constant_j_p_rate = 1.1788853299370232e-09  # steady state value of model
 
         self.v = 0
         self.E_cl = 0
@@ -190,6 +190,8 @@ class Compartment():
         #self.x_o = xo
         self.osm_o = self.x_o + self.na_o + self.cl_o + self.k_o
 
+        #When jp is set to constant the rate is based of the initial ion concentrations
+        self.constant_j_p_rate = self.p * (self.na_i/self.na_o)**3  # steady state value of model
 
         # Ionic conductance
         self.g_x = g_x   # basically 0 ... therefore impermeant
@@ -441,7 +443,9 @@ class Compartment():
                 self.xflux_setup = False
                 self.d_xflux = self.alpha - np.e**(self.beta * self.t_xflux)
                 self.xflux = self.d_xflux * x_conc
+                self.temp_osmo = self.x_i * self.z_i + self.xflux * z
                 self.x_i = self.x_start+self.xflux
+                self.z_i = self.temp_osmo / self.x_i
                 self.t_xflux += self.dt_xflux
 
         else:

@@ -415,7 +415,7 @@ class Compartment():
 
         return
 
-    def x_flux(self, run_t=0, start_t=0, end_t=50, x_conc=1e-3, z=-0.85):
+    def x_flux(self, type='dynamic', run_t=0, start_t=0, end_t=50, x_conc=1e-3, flux_rate=1, z=-0.85):
         """
         FLUX IMPERMEANTS INTO THE COMPARTMENT
         :param start_t:  Start time to impermeant flux
@@ -431,21 +431,41 @@ class Compartment():
 
                 #starting values for flux
                 self.x_start = self.x_i
+                self.z_start = self.z_i
+                self.total_x_flux = 0
+                self.static_xflux = (flux_rate / 60) / (self.dt)
                 self.d_xflux = 0
+                self.d_zflux = 0
                 self.x_final = self.x_i + x_conc
+                self.osmo_final = (self.x_start*self.z_start) + (x_conc*z)
+                self.z_final = self.osmo_final/self.x_final
+                self.z_diff = self.z_final -self.z_start
                 self.t_xflux = 0
                 self.flux_points = (end_t - start_t) * (1/self.dt)
                 self.dt_xflux = 4/self.flux_points
                 self.alpha = 1
                 self.beta = -1
 
-            if self.x_i <=self.x_final:
+            if (type == 'dynamic') and (self.x_i <=self.x_final):
                 self.xflux_setup = False
                 self.d_xflux = self.alpha - np.e**(self.beta * self.t_xflux)
                 self.xflux = self.d_xflux * x_conc
-                self.temp_osmo = self.x_i * self.z_i + self.xflux * z
+                self.zflux = self.d_xflux * self.z_diff # z can adjust at the same rate as x
+                #self.temp_osmo = self.x_i * self.z_i + self.xflux * z
+                self.total_x_flux += self.xflux
                 self.x_i = self.x_start+self.xflux
-                self.z_i = self.temp_osmo / self.x_i
+                self.z_i = self.z_start + self.zflux
+                #self.z_i = self.temp_osmo / self.x_i
+                self.t_xflux += self.dt_xflux
+
+            if (type == 'static'):
+                self.xflux_setup = False
+
+                self.total_x_flux += self.static_xflux
+                z_temp = (self.x_start*self.z_start) + (self.total_x_flux*z)
+                self.z_i = z_temp / (self.x_start+self.total_x_flux)
+                self.x_i = self.x_i + self.static_xflux
+
                 self.t_xflux += self.dt_xflux
 
         else:

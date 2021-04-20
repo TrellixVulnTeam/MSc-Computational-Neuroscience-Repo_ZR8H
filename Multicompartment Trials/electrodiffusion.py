@@ -55,7 +55,7 @@ class Electrodiffusion:
         """
         z = val[ion]
         d = diff_constants[ion]
-        j_drift = - (d / RTF * z * dV / self.dx) * (conc_a+ conc_b)
+        j_drift = - (d / RTF * z * dV / self.dx) * (conc_a + conc_b)
         # Chris and Kira have a odd way of calculating the difference in concentration
         return j_drift
     

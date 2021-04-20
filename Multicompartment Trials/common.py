@@ -46,3 +46,4 @@ default_Cm = 2e-4 #default membrane capacitance (F/dm^2)
 val = {"na":1, "k":1, "cl":-1,"x":-0.85}
 
 diff_constants = {"na" : 1.33e-7, "k": 1.96e-7, "cl":2.03e-7, "x":0} #diffusion coefficients for the various ions in dm2/s
+#diff_constants = {"na" : 1.33e-8, "k": 1.96e-8, "cl":2.03e-8, "x":0}

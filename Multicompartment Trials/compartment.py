@@ -20,7 +20,6 @@ Methods:
     get_df_array: sends the dataframe arrays back to the simulation
 
 
-
 """
 
 ##################################################################################
@@ -44,12 +43,8 @@ class Compartment():
         self.name = compartment_name
         self.radius = radius  # in dm
         self.length = length  # in dm
-        self.vw = vw
-        self.pw = pw
         self.w = np.pi * (self.radius ** 2) * self.length
-        self.dw = 0
-        self.w2 = 0
-        self.w_temp = self.w
+        self.dw, self.w2 = 0,0
         self.sa = 2 * np.pi * self.radius * self.length
         self.ar = self.sa / self.w
         self.C = cm
@@ -61,99 +56,38 @@ class Compartment():
         self.j_kcc2 = 0
         self.p = (10 ** p) / F
         self.j_p = 0
-        #self.constant_j_p_rate = 1.1788853299370232e-09  # steady state value of model
+        self.constant_j_atp =False
 
-        self.v = 0
-        self.E_cl = 0
-        self.E_k = 0
-        self.drivingf_cl = 0
-
-        self.na_i = 0
-        self.k_i = 0
-        self.cl_i = 0
-        self.x_i = 0
-        self.z_i = 0
-        self.na_o = 0
-        self.k_o = 0
-        self.cl_o = 0
-        self.x_o =0
-        self.osm_i = 0
-        self.osm_o = 0
+        self.v, self.E_cl, self.E_k, self.drivingf_cl = 0,0,0,0
+        self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i, self.osm_i  = 0,0,0,0,0,0
+        self.na_o, self.k_o, self.cl_o, self.x_o, self.z_o, self.osm_o = 0,0,0,0,0,0
 
         self.x_default = 154.962e-3
-
         self.z_default = -0.85
 
-        self.na_ramp = 0
-        self.diff = 0
-
-        self.xflux_setup = True
-        self.zflux_setup =True
-
-        self.external_xflux_setup = True
-
-        self.xflux_switch = False #if this x-flux will occur as specified
-        self.zflux_switch = False
-
-
-        self.xflux = 0
-        self.xoflux =0
+        self.xflux_setup, self.zflux_setup, self.external_xflux_setup  = True,True,True
+        self.xflux_switch, self.zflux_switch  = False, False
+        self.xflux, self.xoflux = 0,0
 
         # Zeroing Delta values
-        self.d_na_i = 0
-        self.d_na_atpase = 0
-        self.d_na_leak = 0
-        self.d_k_i = 0
-        self.d_k_atpase = 0
-        self.d_k_leak = 0
-        self.d_k_kcc2 =0
-        self.d_cl_i = 0
-        self.d_cl_leak = 0
-        self.d_cl_kcc2 =0
+        self.d_na_i, self.d_na_atpase, self.d_na_leak  = 0,0,0
+        self.d_k_i, self.d_k_atpase, self.d_k_leak, self.d_k_kcc2 = 0,0,0,0
+        self.d_cl_i, self.d_cl_leak, self.d_cl_kcc2  = 0,0,0
         self.d_x_i = 0
 
-        # Zeroing conductances
-        self.g_x = 0  # basically 0 ... therefore impermeant
-        self.g_na = 0
-        self.g_k = 0
-        self.g_cl = 0
+        self.g_na, self.g_k, self.g_cl, self.g_x  = 0,0,0,0 #Conductances
 
-        self.dt = 0
-        self.syn_t_off = 0
-        self.syn_t_on = 0
+        self.dt, self.syn_t_on, self.syn_t_off  = 0,0,0 #Timing
 
-        # Zeroing arrays
-        self.na_arr = []
-        self.k_arr = []
-        self.cl_arr = []
-        self.x_arr = []
-
-        self.z_arr = []
-        self.d_na_arr = []
-        self.d_na_leak_arr =[]
-        self.d_na_atpase_arr =[]
-        self.d_k_arr = []
-        self.d_k_leak_arr = []
-        self.d_k_atpase_arr = []
-        self.d_k_kcc2_arr = []
-        self.d_cl_arr = []
-        self.d_cl_leak_arr = []
-        self.d_cl_kcc2_arr = []
-
-
+        self.na_arr, self.k_arr, self.cl_arr, self.x_arr, self.z_arr = [],[],[],[],[]
+        self.d_na_arr, self.d_na_leak_arr, self.d_na_atpase_arr = [],[],[]
+        self.d_k_arr, self.d_k_leak_arr, self.d_k_atpase_arr, self.d_k_kcc2_arr   = [],[],[],[]
+        self.d_cl_arr, self.d_cl_leak_arr, self.d_cl_kcc2_arr  = [], [], []
         self.j_p_arr = []
-        self.v_arr = []
-        self.d_w_arr = []
-        self.E_k_arr = []
-        self.E_cl_arr = []
-        self.drivingf_cl_arr = []
-        self.w_arr = []
-        self.ar_arr = []
-        self.osm_i_arr = []
-        self.osm_o_arr = []
-        self.xflux_arr = []
-        self.zflux_arr = []
-        self.xo_arr = []
+        self.v_arr, self.E_k_arr, self.E_cl_arr, self.drivingf_cl_arr = [],[],[],[]
+        self.w_arr, self.d_w_arr, self.ar_arr = [],[],[]
+        self.osm_i_arr, self.osm_o_arr = [],[]
+        self.xflux_arr, self.zflux_arr, self.xo_arr   = [],[],[]
 
     def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i=154.962e-3, z_i=-0.85, g_x=0e-9):
         """
@@ -162,74 +96,42 @@ class Compartment():
         - External ionic concentrations (based on imports)
         - Ionic conductances (based on imports)
         """
-
-        self.na_i = na_i
-        self.k_i = k_i
-        self.cl_i = cl_i
-        self.z_i = z_i
-        self.x_i = x_i
-
-        self.x_start = x_i
-        self.z_start = z_i
-
-        """if cl_i == 0:
-            # setting chloride that is osmo- and electro-neutral initially.
-            self.cl_i = (oso + (self.na_i + self.k_i) * (1 / self.z_i - 1)) / (1 + self.z_i)
-      
-           if self.k_i == 0:
-            self.x_i = 155.858e-3
-            self.k_i = self.cl_i-self.z_i*self.x_i-self.na_i
-           else:
-            self.x_i = (self.cl_i - self.k_i - self.na_i) / self.z_i """
-
-        # Extracellular ion properties:
-        self.na_o = nao
-        self.k_o = ko
-        self.cl_o = clo
+        self.na_i, self.k_i,self.cl_i,self.x_i, self.z_i  = na_i, k_i, cl_i,x_i,z_i #Intracellular ion concentrations
+        self.x_start,  self.z_start  = x_i, z_i
+        self.na_o, self.k_o, self.cl_o = nao,ko,clo #Default extracellular ion concentrations
         self.x_o = -1 * (self.cl_o - self.na_o - self.k_o)
-        #self.x_o = xo
         self.osm_o = self.x_o + self.na_o + self.cl_o + self.k_o
 
         #When jp is set to constant the rate is based of the initial ion concentrations
         self.constant_j_p_rate = self.p * (self.na_i/self.na_o)**3  # steady state value of model
 
         # Ionic conductance
-        self.g_x = g_x   # basically 0 ... therefore impermeant
-        self.g_na = gna
-        self.g_k = gk
-        self.g_cl = gcl
-
-        #Temp values for anion fluxes:
-        #self.x_ratio = 0.98  # ratio used in x_flux calculations as per Kira
-        #self.x_temp_high = self.x_i(1-self.x_ratio)
-        #self.x_temp_low =self.x_i(self.x_ratio)
+        self.g_na, self.g_k, self.g_cl, self.g_x, = gna,gk, gcl, g_x
 
     def set_external_ion_properties(self,na_o = 145e-3, k_o= 3.5e-3 ,cl_o = 119e-3, x_o = 29.5e-3, z_o = -0.85):
         """
         Capacity to change the extracellular bath properties before the simulation
         """
-
-        self.na_o = na_o
-        self.k_o = k_o
-        self.x_o = x_o
-        self.cl_o = cl_o
-        self.z_o = z_o
+        self.na_o, self.k_o, self.cl_o, self.x_o, self.z_o  = na_o, k_o, cl_o, x_o, z_o
 
     def osmol_neutral_start(self):
         """
         Function to ensure that the start of the simulation is osmoneutral.
         Therefore can't just start the simulation with large differences between positive and negative values
         """
-        """ERAN START RAMP:
-        if self.x_i * self.z_i <= -140e-3:  # -140 is a value chosen for when the ramp should be activated based on when system was crashing based on too much impermeants.
-            self.diff = (self.x_i * self.z_i) + 140e-3
-            self.na_ramp = self.diff * -1  # Adding some extra intracellular sodium to the compartment to offset the change of impermeants
-            self.na_i += self.na_ramp"""
-
-        """KIRA START RAMP:"""
         self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
 
-    def step(self, dt=1e-3, total_t=120, t=0, constant_j_atp=False):
+    def set_timing(self, dt=1e-3, total_t=120):
+        """Function to define the timing of the simulation"""
+        self.dt,self.total_t = dt,total_t
+
+    def set_j_atp(self, constant_j_atp=False):
+        self.constant_j_atp = constant_j_atp
+
+    def set_area_scale(self,constant_ar= False):
+        self.constant_ar = constant_ar
+
+    def step(self,t=0):
         """
         Perform a time step for the specific compartment.
         1)  Reset deltas to zero
@@ -240,30 +142,21 @@ class Compartment():
 
         """
         # 1) Zeroing deltas
-        self.dt = dt
-        self.total_t = total_t
+
         self.t = t
-        self.d_na_i = 0
-        self.d_k_i = 0
-        self.d_cl_i = 0
-        self.d_x_i = 0
+        self.d_na_i, self.d_k_i, self.d_cl_i, self.d_x_i  = 0,0,0,0
 
         # 2) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
-
-        if self.cl_i < 0:
-            print("Cl_i = " + str(self.cl_i))
-            print("d_Cl_i = " + str(self.d_cl_arr[-1]))
-            raise Exception("chloride log can't have a negative number")
 
         self.E_k = -1 * RTF * np.log(self.k_i / self.k_o)
         self.E_cl = RTF * np.log(self.cl_i / self.cl_o)
         self.drivingf_cl = self.v - self.E_cl
 
         # 3) Update ATPase and KCC2 pump rate
-        if constant_j_atp == False:
+        if self.constant_j_atp == False:
             self.j_p = self.p * (self.na_i / nao) ** 3
-        elif constant_j_atp == True:
+        elif self.constant_j_atp == True:
             self.j_p = self.constant_j_p_rate
 
         self.j_kcc2 = self.p_kcc2 * (self.E_k - self.E_cl)
@@ -287,7 +180,10 @@ class Compartment():
         self.d_cl_kcc2 = + self.dt * self.ar * (self.j_kcc2)
         self.d_cl_i = self.d_cl_leak + self.d_cl_kcc2
 
-
+        if self.cl_i < 0:
+            print("Cl_i = " + str(self.cl_i))
+            print("d_Cl_i = " + str(self.d_cl_arr[-1]))
+            raise Exception("chloride log can't have a negative number")
         #self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
 
         #self.d_x_i = - self.dt * self.ar * self.z_i * (self.g_x *
@@ -298,13 +194,13 @@ class Compartment():
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
 
-    def update_volumes(self, constant_ar=False):
+    def update_volumes(self):
         """ Calculates the new compartment volume (dm3)
         Elongation should occur radially
         """
         self.osm_i = self.na_i + self.k_i + self.cl_i + self.x_i
         self.osm_o = self.na_o + self.k_o + self.cl_o + self.x_o
-        self.dw = self.dt * (self.vw * self.pw * self.sa * (self.osm_i - self.osm_o))
+        self.dw = self.dt * (vw * pw * self.sa * (self.osm_i - self.osm_o))
         self.w2 = self.w + self.dw
 
         self.na_i = self.na_i * self.w / self.w2
@@ -314,7 +210,7 @@ class Compartment():
 
         self.w = self.w2
 
-        if constant_ar:
+        if self.constant_ar:
             self.ar = self.constant_ar_val
         else:
             self.ar = self.sa / self.w
@@ -339,8 +235,6 @@ class Compartment():
         self.d_cl_arr.append(self.d_cl_i * 1000)
         self.d_cl_leak_arr.append(self.d_cl_leak * 1000)
         self.d_cl_kcc2_arr.append(self.d_cl_kcc2 * 1000)
-
-
 
         self.z_arr.append(self.z_i)
         self.w_arr.append(self.w * (10 ** 12))
@@ -430,12 +324,11 @@ class Compartment():
             if self.xflux_setup:
 
                 #starting values for flux
-                self.x_start = self.x_i
-                self.z_start = self.z_i
-                self.total_x_flux = 0
+                self.x_start, self.z_start  = self.x_i, self.z_i
+                self.d_xflux,self.d_zflux, self.total_x_flux  = 0,0,0
                 self.static_xflux = (flux_rate / 60) / (self.dt)
-                self.d_xflux = 0
-                self.d_zflux = 0
+
+
                 self.x_final = self.x_i + x_conc
                 self.osmo_final = (self.x_start*self.z_start) + (x_conc*z)
                 self.z_final = self.osmo_final/self.x_final

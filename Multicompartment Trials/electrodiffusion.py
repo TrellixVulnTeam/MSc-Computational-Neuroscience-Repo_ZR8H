@@ -28,15 +28,8 @@ class Electrodiffusion:
         self.comp_a = comp_a
         self.comp_b = comp_b
         self.dx =self.comp_a.length/2 + self.comp_b.length/2
-        self.bound_na_arr = [] #arr of the various changes occuring at the boundary
-        self.bound_k_arr = []
-        self.bound_cl_arr = []
-        self.bound_x_arr = []
+        self.bound_na_arr, self.bound_k_arr,self.bound_cl_arr,self.bound_x_arr = [],[],[],[] #arr of the various changes occuring at the boundary
 
-
-
-        
-        
     def calc_diffusion(self,ion="",conc_a=0,conc_b=0):
         """
         Calculates Fick's law for Diffusion

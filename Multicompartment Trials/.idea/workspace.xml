@@ -52,8 +52,8 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore.virus.scanning.warn.message" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Kira Code/model-of-neuronal-chloride-homeostasis-master/plotting.py" />
-    <property name="settings.editor.selected.configurable" value="org.jetbrains.plugins.github.ui.GithubSettingsConfigurable" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/simulator2.py" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.Simulator">
     <configuration name="Jupyter notebook" type="PythonConfigurationType" factoryName="Python">
@@ -173,6 +173,8 @@
       <workItem from="1612872928432" duration="1216000" />
       <workItem from="1612962320720" duration="7565000" />
       <workItem from="1613142947032" duration="757000" />
+      <workItem from="1619363783302" duration="832000" />
+      <workItem from="1619373945054" duration="1884000" />
     </task>
     <servers />
   </component>

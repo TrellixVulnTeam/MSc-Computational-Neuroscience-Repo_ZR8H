@@ -58,6 +58,14 @@ class Compartment:
         self.xflux_setup, self.zflux_setup, self.external_xflux_setup = True, True, True
         self.xflux_switch, self.zflux_switch = False, False
         self.xflux, self.xoflux = 0, 0
+        self.t_xflux = 0
+        self.xflux_params = {"type": "dynamic", "start_t": 0, "end_t": 0, "x_conc": 1,
+                             "flux_rate": 60, "z": 0}
+        self.zflux_params = {"start_t": 0, "end_t": 0, "z": 0}
+        self.dt_xflux, self.flux_points, self.alpha, self.beta = 0, 0, 0, 0
+        self.d_xflux, self.d_zflux, self.total_x_flux, self.static_xflux, self.x_final = 0, 0, 0, 0, 0
+        self.osmo_final = 0
+        self.z_diff, self.z_final, self.z_diff, self.z_inc, self.zflux = 0, 0, 0, 0, 0
 
         # Zeroing Delta values
         self.d_na_i, self.d_na_atpase, self.d_na_leak = 0, 0, 0
@@ -224,85 +232,57 @@ class Compartment:
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}
         return ed_dict
 
-    def get_df_array(self, p, p_kcc2):
-        df_arr = [self.radius, self.length, self.w, self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i, p,
-                  p_kcc2, self.v, self.E_k, self.E_cl, ]
+    def get_df_array(self):
+        df_arr = [self.radius, self.length, self.w, self.na_i, self.k_i,
+                  self.cl_i, self.x_i, self.z_i, self.v, self.E_k, self.E_cl, ]
         return df_arr
 
-    def x_flux(self, type='dynamic', run_t=0, start_t=0, end_t=50, x_conc=1e-3, flux_rate=1, z=-0.85):
+    def x_flux(self):
         """
         FLUX IMPERMEANTS INTO THE COMPARTMENT
-        :param start_t:  Start time to impermeant flux
-        :param end_t:  End time of impermeant fulx
-        :param x_conc: Concentration of impermenat to add to the model
-        :param z: charge of impermeant to add to the model
-        :return:
+
         """
+        if self.xflux_setup:
+            # starting values for flux
+            self.x_start, self.z_start = self.x_i, self.z_i
+            self.static_xflux = (self.xflux_params["flux_rate"] / 60) / self.dt
+            self.x_final = self.x_i + self.xflux_params["x_conc"]
+            self.osmo_final = (self.x_start * self.z_start) + (self.xflux_params["x_conc"] * self.xflux_params["z"])
+            self.z_final = self.osmo_final / self.x_final
+            self.z_diff = self.z_final - self.z_start
+            self.flux_points = (self.xflux_params["end_t"] - self.xflux_params["start_t"]) * (1 / self.dt)
+            self.dt_xflux = 4 / self.flux_points
+            self.alpha = 1
+            self.beta = -1
+            self.xflux_setup = False
 
-        if (start_t <= run_t <= end_t) and self.xflux_switch:
+        if (self.xflux_params["type"] == 'dynamic') and (self.x_i <= self.x_final):
+            self.t_xflux += self.dt_xflux
+            self.d_xflux = self.alpha - np.e ** (self.beta * self.t_xflux)
+            self.xflux = self.d_xflux * self.xflux_params["x_conc"]
+            self.zflux = self.d_xflux * self.z_diff  # z can adjust at the same rate as x
+            # self.temp_osmo = self.x_i * self.z_i + self.xflux * z
+            self.total_x_flux += self.xflux
+            self.x_i = self.x_start + self.xflux
+            self.z_i = self.z_start + self.zflux
+            # self.z_i = self.temp_osmo / self.x_i
 
-            if self.xflux_setup:
-                # starting values for flux
-                self.x_start, self.z_start = self.x_i, self.z_i
-                self.d_xflux, self.d_zflux, self.total_x_flux = 0, 0, 0
-                self.static_xflux = (flux_rate / 60) / (self.dt)
+        elif self.xflux_params["type"] == 'static':
+            self.total_x_flux += self.static_xflux
+            z_temp = (self.x_start * self.z_start) + (self.total_x_flux * self.xflux_params["z"])
+            self.z_i = z_temp / (self.x_start + self.total_x_flux)
+            self.x_i = self.x_i + self.static_xflux
+            self.t_xflux += self.dt_xflux
 
-                self.x_final = self.x_i + x_conc
-                self.osmo_final = (self.x_start * self.z_start) + (x_conc * z)
-                self.z_final = self.osmo_final / self.x_final
-                self.z_diff = self.z_final - self.z_start
-                self.t_xflux = 0
-                self.flux_points = (end_t - start_t) * (1 / self.dt)
-                self.dt_xflux = 4 / self.flux_points
-                self.alpha = 1
-                self.beta = -1
-
-            if (type == 'dynamic') and (self.x_i <= self.x_final):
-                self.xflux_setup = False
-                self.d_xflux = self.alpha - np.e ** (self.beta * self.t_xflux)
-                self.xflux = self.d_xflux * x_conc
-                self.zflux = self.d_xflux * self.z_diff  # z can adjust at the same rate as x
-                # self.temp_osmo = self.x_i * self.z_i + self.xflux * z
-                self.total_x_flux += self.xflux
-                self.x_i = self.x_start + self.xflux
-                self.z_i = self.z_start + self.zflux
-                # self.z_i = self.temp_osmo / self.x_i
-                self.t_xflux += self.dt_xflux
-
-            if (type == 'static'):
-                self.xflux_setup = False
-
-                self.total_x_flux += self.static_xflux
-                z_temp = (self.x_start * self.z_start) + (self.total_x_flux * z)
-                self.z_i = z_temp / (self.x_start + self.total_x_flux)
-                self.x_i = self.x_i + self.static_xflux
-
-                self.t_xflux += self.dt_xflux
-
-        else:
-            self.xflux = 0
-            return
-
-    def z_flux(self, run_t=0, start_t=0, end_t=50, z=-0.85):
+    def z_flux(self):
         """
-
-        :param start_t:  Start time to impermeant flux
-        :param end_t:  End time of impermeant fulx
-        :param z: charge of impermeant to add to the model
-        :return:
+        Changing the charge of intra-compartmental impermeants during the simulation
         """
         if self.zflux_setup:
-            self.z_diff = z - self.z_i
+            self.z_diff = self.zflux_params["z"] - self.z_i
             # self.x_mol_start =  self.w * self.x_i
-
-        if (start_t <= run_t <= end_t) and self.zflux_switch:
-
-            t_diff = (end_t - start_t) / self.dt
-
-            z_inc = self.z_diff / t_diff
-            self.z_i += z_inc
-
+            t_diff = (self.zflux_params["end_t"] - self.zflux_params["start_t"]) / self.dt
+            self.z_inc = self.z_diff / t_diff
             self.zflux_setup = False
         else:
-            z_inc = 0
-            return
+            self.z_i += self.z_inc

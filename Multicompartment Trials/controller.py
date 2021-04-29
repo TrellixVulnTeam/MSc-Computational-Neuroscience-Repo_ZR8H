@@ -3,6 +3,8 @@ Main script to run simulation
 """
 import simulator2
 import compartment
+import numpy as np
+import time
 
 # 1) CREATE COMPARTMENTS:
 comp1 = compartment.Compartment("Comp1")
@@ -23,14 +25,25 @@ sim.set_electrodiffusion_properties(ED_on=True)
 sim.set_external_ion_properties()
 sim.set_j_atp(constant_j_atp=False)
 sim.set_area_scale(constant_ar=False)
-sim.set_timing(total_t=100, time_step=0.001)
+total_t =600
+time_step =0.01*1e-3
+sim.set_timing(total_t=600, time_step=0.01*1e-3, intervals=500)
 
-sim.set_xflux(comps=["Comp2"], type="dynamic", start_t=50, end_t=80, x_conc=2e-3, z=-0.85)
+sim.set_xflux(comps=["Comp2"], type="dynamic", start_t=100, end_t=300, x_conc=2e-3, z=-1.0)
 # sim.set_zflux()
 ##sim.set_xoflux()
+#run_t_arr = np.arange[0:total_t:time_step]
 
 # 4) RUN SIMULATION
-sim.run_simulation()
+
+#sim.run_simulation()
+sim.start_t = time.time()
+while sim.run_t <=sim.start_t:
+    sim.run_simulation()
+
+print(sim.output_arr)
+print(sim.output_intervals)
+print(sim.run_t)
 
 
 

@@ -9,7 +9,7 @@ import compartment
 import electrodiffusion
 from common import F
 import numpy as np
-from os import system, name
+import time
 
 
 class simulator:
@@ -18,7 +18,14 @@ class simulator:
         """ Compartments array needs to be in the format of compartment class"""
 
         self.run_t = 0
+        self.start_t = 0
+        self.one_percent_t = 0
+        self.end_t = 0
+        self.interval_num = 1
         self.t_arr = []
+        self.run_t_arr = []
+        self.output_arr = []
+        self.output_intervals = []
         self.ED_on = True
         self.ed_dict_arr, self.ed_conc_changes_arr = [], []
         self.constant_j_atp, self.constant_ar = False, False
@@ -58,10 +65,18 @@ class simulator:
     def set_area_scale(self, constant_ar=False):
         self.constant_ar = constant_ar
 
-    def set_timing(self, total_t, time_step):
+    def set_timing(self, total_t, time_step, intervals=1000):
         self.total_t, self.dt = total_t, time_step
         for i in range(len(self.comp_arr)):
-            self.comp_arr[i].dt=time_step
+            self.comp_arr[i].dt = time_step
+        self.total_steps = self.total_t / self.dt
+        #self.run_t_arr = np.arange[0:total_t:time_step]
+
+        self.output_intervals = [0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1]
+        self.output_arr = [self.output_intervals[a] * self.total_t for a in range(len(self.output_intervals))]
+
+        self.intervals = intervals
+        self.interval_step = self.total_steps / self.intervals
 
     def set_xflux(self, all_comps=False, comps=None, type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1,
                   z=-0.85):
@@ -91,6 +106,14 @@ class simulator:
         self.xoflux_switch = True
         self.xoflux_params = {"start_t": start_t, "end_t": end_t, "xo_conc": xo_conc, "zo": z}
 
+    def gen_comps(self, comp=[compartment]):
+        for i in range(len(comp)):
+            yield (comp[i])
+
+    def gen_run_t(self, run_time_arr=[]):
+        for i in run_time_arr:
+            yield run_time_arr[i]
+
     def xoflux(self):
 
         if self.xoflux_setup:
@@ -115,66 +138,87 @@ class simulator:
         else:
             return
 
+    def simulate(self):
+           self.run_simulation()
+
     def run_simulation(self):
 
-        while self.run_t < self.total_t:
-
-            if self.ED_on:
-
-                for a in range(len(self.comp_arr)):
-
-                    self.comp_arr[a].step(self.dt,
-                                          self.na_o, self.k_o, self.cl_o,
-                                          constant_j_atp=self.constant_j_atp,
-                                          p=self.p)
-
-                    # step for each compartment
-
-                    if self.comp_arr[a].xflux_switch and \
-                            (self.comp_arr[a].xflux_params["start_t"] <= self.run_t <= self.comp_arr[a].xflux_params[
-                                "end_t"]):
-                        self.comp_arr[a].x_flux()
-
-                    if self.comp_arr[a].zflux_switch and \
-                            (self.comp_arr[a].zflux_params["start_t"] <= self.run_t <= self.comp_arr[a].zflux_params[
-                                "end_t"]):
-                        self.comp_arr[a].z_flux()
-
-                    if self.xoflux_switch and \
-                            self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
-                        self.xoflux()
-
-                    self.ed_dict_arr.append(self.comp_arr[a].get_ed_dict())
-                    # electrodiffusion dictionary for each compartment
-
-                for b in range(len(self.comp_arr) - 1):
-                    self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.ed_dict_arr[b],
-                                                                           self.ed_dict_arr[b + 1]))
-                    # makes an array of all the ED conc changes
-
-                for c in range(len(self.comp_arr) - 1):
-                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[c],
-                                               "positive")
-                    self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[c], "negative")
-                    # appending the electrodiffusion concentrations for each compartment
-
-                for d in range(len(self.comp_arr)):
-                    self.comp_arr[
-                        d].update_volumes(self.dt, self.osm_o, self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
-                    if self.run_t != 0:
-                        self.comp_arr[d].update_arrays()
-                    # df_sim[comp_arr[d].name] = comp_arr[d].get_df_array()
 
 
+        if self.ED_on:
+
+            for a in self.gen_comps(self.comp_arr):
+
+                a.step(self.dt,
+                       self.na_o, self.k_o, self.cl_o,
+                       constant_j_atp=self.constant_j_atp,
+                       p=self.p)
+
+                # step for each compartment
+
+                if a.xflux_switch and \
+                        (a.xflux_params["start_t"] <= self.run_t <= a.xflux_params[
+                            "end_t"]):
+                    a.x_flux()
+
+                if a.zflux_switch and \
+                        (a.zflux_params["start_t"] <= self.run_t <= a.zflux_params[
+                            "end_t"]):
+                    a.z_flux()
+
+                if self.xoflux_switch and \
+                        self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
+                    self.xoflux()
+
+                self.ed_dict_arr.append(a.get_ed_dict())
+                # electrodiffusion dictionary for each compartment
+
+            for b in range(len(self.comp_arr) - 1):
+                self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.ed_dict_arr[b],
+                                                                       self.ed_dict_arr[b + 1]))
+
+                # makes an array of all the ED conc changes
+            self.c2 = 0
+            for c in self.gen_comps(self.comp_arr[0:-2]):
+                c.ed_update(self.ed_conc_changes_arr[self.c2],
+                            "positive")
+                c.ed_update(self.ed_conc_changes_arr[self.c2], "negative")
+                self.c2 = + 1
+                # appending the electrodiffusion concentrations for each compartment
+
+            for d in self.gen_comps(self.comp_arr):
+                d.update_volumes(self.dt, self.osm_o,
+                                 self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
+
+            if self.run_t == self.interval_step * self.interval_num:
+
+                for e in self.gen_comps(self.comp_arr):
+                    e.update_arrays()
+                self.interval_num += 1
                 self.t_arr.append(self.run_t)
-                self.run_t += self.dt
-                #print(str(round(self.run_t/self.total_t*100,2))+"%")
 
-            """elif not self.ED_on:  # if you want to run with normal diffusion not ED
-                for a in range(len(self.comp_arr)):
-                    self.comp_arr[a].step()
-                    self.comp_arr[a].x_flux()
-                    self.comp_arr[a].update_volumes(ar_constant)  # updates of the volumes, arrays, and 
-                    dataframe for each compartment
-                    self.comp_arr[a].update_arrays()
-                    #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""
+            for f in range(len(self.output_arr)):
+                if round(self.run_t, 5) == self.output_arr[f]:
+                    if f == 2:
+                        self.one_percent_t = time.time() - self.start_t
+                        self.hundred_percent_t = self.one_percent_t * 100
+                        print(str(self.output_intervals[f] * 100) + " % complete in " + str(
+                            round(self.one_percent_t, 2)) + " s")
+                        print("Estimated time to complete :" + str(round(self.hundred_percent_t / 60, 2)) + " minutes")
+                    else:
+                        print(str(self.output_intervals[f] * 100) + " % complete in " + str(
+                            round(time.time() - self.start_t, 2)) + " s")
+
+            self.run_t += self.dt
+        # print(str(round(self.run_t/self.total_t*100,2))+"%")
+
+        self.end_t = time.time()
+
+    """elif not self.ED_on:  # if you want to run with normal diffusion not ED
+            for a in range(len(self.comp_arr)):
+                self.comp_arr[a].step()
+                self.comp_arr[a].x_flux()
+                self.comp_arr[a].update_volumes(ar_constant)  # updates of the volumes, arrays, and 
+                dataframe for each compartment
+                self.comp_arr[a].update_arrays()
+                #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""

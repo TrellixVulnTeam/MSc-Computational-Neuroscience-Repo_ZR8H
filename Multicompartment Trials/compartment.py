@@ -26,6 +26,7 @@ from common import \
     gk, gna, gcl, \
     pw, vw, RTF, cm
 from constants import F
+import h5py
 
 
 ##################################################################################
@@ -101,8 +102,14 @@ class Compartment:
              na_o=0, k_o=0, cl_o=0,
              constant_j_atp=False, p=(10 ** -1) / F,
              p_kcc2=2e-3 / F):
+
+        ### ACCESSING LATEST DATASET FOR THAT COMPARTMENT
+
+
+
         """
         Perform a time step for the specific compartment.
+
 
 
         """
@@ -180,6 +187,8 @@ class Compartment:
 
         self.FinvCAr = F / (cm * self.ar)
 
+
+
     def update_arrays(self):
         """
         Update arrays such that they reflect the actual values
@@ -232,10 +241,19 @@ class Compartment:
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}
         return ed_dict
 
-    def get_df_array(self):
-        df_arr = [self.radius, self.length, self.w, self.na_i, self.k_i,
-                  self.cl_i, self.x_i, self.z_i, self.v, self.E_k, self.E_cl, ]
-        return df_arr
+    def get_df_dict(self,time=0):
+        df_dict = {"time":time,"name": self.name, "radius": self.radius, "length": self.length, "volume": self.w, "na": self.na_i, "k": self.k_i,
+                  "cl": self.cl_i , "x": self.x_i, "z": self.z_i, "vm": self.v, "e_k": self.E_k,"e_cl": self.E_cl}
+        return df_dict
+
+    def get_array(self,time=0):
+        array = [time,self.radius,self.length, self.w,
+                 self.na_i, self.k_i, self.cl_i , self.x_i, self.z_i,
+                 self.d_na_i,self.d_na_leak, self.d_na_atpase,
+                 self.d_k_i, self.d_k_leak, self.d_k_atpase, self.d_k_kcc2,
+                 self.d_cl_i, self.d_cl_leak, self.d_cl_kcc2,
+                 self.v, self.E_k, self.E_cl]
+        return array
 
     def x_flux(self):
         """

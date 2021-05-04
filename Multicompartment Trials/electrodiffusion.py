@@ -11,24 +11,29 @@ Analgous to the diffusion class from Kira and Chris
 from common import T, RTF,val,diff_constants
 from compartment import Compartment
 from constants import k,q,valence
-
+import pandas as pd
+import h5py
 
 
 class Electrodiffusion:
     """ Class to manage all the 1 dimensional electrodiffusion calculations"""
     
-    def __init__ (self, comp_a= Compartment, comp_b= Compartment):
+    def __init__ (self, comp_a_name= '', comp_a_length=10, comp_b_name ='', comp_b_length=10):
         """Creating a connection between 2 compartments
         comp_a refers to the first compartment
         comp_b refers to the second compartment
         d_ion is a dictionary in the form {'ion': Diffusion coefficient} e.g. {'na':1.33e-7}
         """
         
-        self.name = comp_a.name +  ' <-> ' + comp_b.name
-        self.comp_a = comp_a
-        self.comp_b = comp_b
-        self.dx =self.comp_a.length/2 + self.comp_b.length/2
-        self.bound_na_arr, self.bound_k_arr,self.bound_cl_arr,self.bound_x_arr = [],[],[],[] #arr of the various changes occuring at the boundary
+        self.name = comp_a_name +  ' <-> ' + comp_b_name
+        self.comp_a = comp_a_name
+        self.comp_b = comp_b_name
+        self.dx =comp_a_length/2 + comp_b_length/2
+        #self.bound_na_arr, self.bound_k_arr,self.bound_cl_arr,self.bound_x_arr = [],[],[],[] #arr of the various changes occuring at the boundary
+
+        self.ed_setup = [self.name,self.comp_a,self.comp_b,self.dx]
+
+
 
     def calc_diffusion(self,ion="",conc_a=0,conc_b=0):
         """
@@ -60,31 +65,18 @@ class Electrodiffusion:
 
         """
 
-        self.ed_change = {"na": 0, "k": 0, "cl": 0, "x": 0}
-
+        self.ed_change_dict = {"na": 0, "k": 0, "cl": 0, "x": 0}
+        self.ed_change_arr = [] #array which will be save as the dataset
         dv = comp_a_ed_dict["Vm"] - comp_b_ed_dict["Vm"]
-        ions = list(self.ed_change)
+        ions = list(self.ed_change_dict)
 
         for i in range(4):
             ion = ions[i]
-            self.ed_change[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)/2
-            self.ed_change[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
-            self.ed_change[ion] *= dt
+            self.ed_change_dict[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)/2
+            self.ed_change_dict[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
+            self.ed_change_dict[ion] *= dt
+            self.ed_change_arr.append(self.ed_change_dict[ion])
 
-        self.bound_na_arr.append(self.ed_change["na"]*1000)
-        self.bound_k_arr.append(self.ed_change["k"]*1000)
-        self.bound_cl_arr.append(self.ed_change["cl"]*1000)
-        self.bound_x_arr.append(self.ed_change["x"]*1000)
+        return self.ed_change_dict
 
-        return self.ed_change
 
-    def get_bound_arr(self,ion=""):
-
-        if ion == "na":
-            return self.bound_na_arr
-        elif ion == "k":
-            return self.bound_k_arr
-        elif ion == "cl":
-            return self.bound_cl_arr
-        elif ion == "x":
-            return self.bound_x_arr

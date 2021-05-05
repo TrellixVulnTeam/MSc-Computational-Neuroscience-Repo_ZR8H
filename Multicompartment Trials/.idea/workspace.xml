@@ -200,7 +200,7 @@
       <workItem from="1619712328826" duration="474000" />
       <workItem from="1619712862917" duration="35008000" />
       <workItem from="1620125465986" duration="2537000" />
-      <workItem from="1620131540332" duration="2841000" />
+      <workItem from="1620131540332" duration="5353000" />
     </task>
     <servers />
   </component>
@@ -227,7 +227,7 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/Multicompartment_Trials$Controller.coverage" NAME="Controller Coverage Results" MODIFIED="1620134063396" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/Multicompartment_Trials$Controller.coverage" NAME="Controller Coverage Results" MODIFIED="1620139578737" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Multicompartment_Trials$Sandbox.coverage" NAME="Sandbox Coverage Results" MODIFIED="1610872878802" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/Multicompartment_Trials$Simulator.coverage" NAME="Controller Coverage Results" MODIFIED="1619517360404" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>

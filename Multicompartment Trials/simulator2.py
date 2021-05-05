@@ -16,10 +16,10 @@ import h5py
 
 class simulator:
 
-    def __init__(self, file_name =""):
+    def __init__(self, file_name=""):
         """ Compartments array needs to be in the format of compartment class"""
         self.file_name = file_name
-        self.file_name = "\ "+ file_name
+        self.file_name = "\ " + file_name
 
         try:
             with h5py.File(self.file_name, mode='w') as self.hdf:
@@ -28,7 +28,7 @@ class simulator:
                 self.hdf.create_group("TIMING")
                 self.hdf.create_group("X-FLUX")
                 self.hdf.create_group("SYNAPSES")
-                print("simulation file ('"+file_name+"') created")
+                print("simulation file ('" + file_name + "') created")
 
 
         except:
@@ -37,16 +37,13 @@ class simulator:
         # COMPS = hdf.put('COMPARTMENTS/COMP1', df_comp1, format='table')
         # ELECTRODIFFUSION = hdf.create_group('ELECTRODIFFUSION')
 
-
-
-
         self.num_comps = 0
         self.run_t = 0
         self.start_t = time.time()
         self.one_percent_t = 0
         self.end_t = 0
         self.interval_num = 1
-
+        self.steps = 0
 
         self.output_arr = []
         self.output_intervals = []
@@ -121,18 +118,20 @@ class simulator:
         self.total_t, self.dt = total_t, time_step
         with h5py.File(self.file_name, mode='a') as self.hdf:
             timing = self.hdf.get("TIMING")
-            timing.create_dataset("DT", data=self.dt)
-            timing.create_dataset("TOTAL_T", data=self.total_t)
+            timing.create_dataset("DT", data=time_step)
+            timing.create_dataset("TOTAL_T", data=total_t)
+            timing.create_dataset("INTERVALS", data=intervals)
 
         self.total_steps = self.total_t / self.dt
 
         self.output_intervals = [0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1]
-        self.output_arr = [self.output_intervals[a] * self.total_t for a in range(len(self.output_intervals))]
+        self.output_arr = [round(self.output_intervals[a] * self.total_steps, 0) for a in range(len(self.output_intervals))]
+
+        self.interval_step = self.total_steps / intervals
+        self.interval_arr = [round(self.interval_step * i) for i in range(intervals)]
 
 
-        self.interval_step =self.total_t/intervals
-        self.interval_arr = [self.interval_step*i for i in range(intervals)]
-       # print(self.interval_arr)
+    # print(self.interval_arr)
 
     def set_xflux(self, all_comps=False, comps=None, type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1,
                   z=-0.85):
@@ -159,11 +158,9 @@ class simulator:
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
             xflux_group = self.hdf.get("X-FLUX")
-            xflux_setup = xflux_group.create_dataset("X-FLUX SETUP",data=xflux_params)
+            xflux_setup = xflux_group.create_dataset("X-FLUX SETUP", data=xflux_params)
             for c in range(len(xflux_comps)):
-                xflux_group.create_dataset("X-FLUX " + xflux_comps[c],data=[])
-
-
+                xflux_group.create_dataset("X-FLUX " + xflux_comps[c], data=[])
 
     # xflux_params is a dictionary sent to compartments that have the xflux_switch on
 
@@ -216,22 +213,22 @@ class simulator:
         else:
             return
 
-
     def run_simulation(self):
 
+        self.start_t = time.time()
         while self.run_t < self.total_t:
 
+
             if self.ED_on:
-                self.ed_dict_arr =[]
+                self.ed_dict_arr = []
                 self.ed_conc_changes_arr = []
 
                 for a in self.gen_comps(self.comp_arr):
 
-                    a.step(dt= self.dt,
-                           na_o= self.na_o, k_o= self.k_o, cl_o= self.cl_o,
+                    a.step(dt=self.dt,
+                           na_o=self.na_o, k_o=self.k_o, cl_o=self.cl_o,
                            constant_j_atp=self.constant_j_atp,
-                           p=self.p, p_kcc2 = 2e-3 / F)
-
+                           p=self.p, p_kcc2=2e-3 / F)
 
                     # step for each compartment
 
@@ -269,28 +266,31 @@ class simulator:
                     d.update_volumes(self.dt, self.osm_o,
                                      self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
 
-
-
-
                 for f in range(len(self.output_arr)):
-                    if round(self.run_t, 7) == self.output_arr[f]:
+                    if self.steps == self.output_arr[f]:
                         if f == 2:
                             self.one_percent_t = time.time() - self.start_t
                             self.hundred_percent_t = self.one_percent_t * 100
                             print(str(self.output_intervals[f] * 100) + " % complete in " + str(
                                 round(self.one_percent_t, 2)) + " s")
-                            print("Estimated time to complete :" + str(round(self.hundred_percent_t / 60, 2)) + " minutes")
+                            print("Estimated time to complete :" + str(
+                                round(self.hundred_percent_t / 60, 2)) + " minutes")
                         else:
-                            print(str(self.output_intervals[f] * 100) + " % complete in " + str(round(time.time() - self.start_t, 2)) + " s")
+                            print(str(self.output_intervals[f] * 100) + " % complete in " + str(
+                                round(time.time() - self.start_t, 2)) + " s")
+
+                if self.interval_num < len(self.interval_arr):
+                    if self.steps == self.interval_arr[self.interval_num] :
+                        self.interval_num += 1
+                        self.save_to_file()
+
+            self.steps += 1
 
             self.run_t += self.dt
-            if round(self.run_t,6) == round(self.interval_num * self.interval_step,6):
-                self.interval_num += 1
-                self.save_to_file(self.run_t)
-        # print(str(round(self.run_t/self.total_t*100,2))+"%")
 
+        print("100.0 % complete in " + str(
+                                round(time.time() - self.start_t, 2)) + " s")
         self.end_t = time.time()
-
 
     """elif not self.ED_on:  # if you want to run with normal diffusion not ED
             for a in range(len(self.comp_arr)):
@@ -301,21 +301,17 @@ class simulator:
                 self.comp_arr[a].update_arrays()
                 #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""
 
-    def save_to_file(self,time):
+    def save_to_file(self):
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
             for i in range(len(self.comp_arr)):
                 group = self.hdf.get('COMPARTMENTS')
                 subgroup = group.get(self.comp_arr[i].name)
-                data_array= self.comp_arr[i].get_array()
-                subgroup.create_dataset(name=str(time), data=data_array)
+                data_array = self.comp_arr[i].get_array(self.run_t)
+                subgroup.create_dataset(name=str(self.steps), data=data_array)
 
             for j in range(len(self.ed_arr)):
                 group = self.hdf.get('ELECTRODIFFUSION')
                 subgroup = group.get(self.ed_arr[j].name)
                 data_array = self.ed_arr[j].ed_change_arr
-                subgroup.create_dataset(name=str(time), data=data_array)
-
-
-
-
+                subgroup.create_dataset(name=str(self.steps), data=data_array)

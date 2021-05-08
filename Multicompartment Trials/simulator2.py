@@ -125,42 +125,33 @@ class simulator:
         self.total_steps = self.total_t / self.dt
 
         self.output_intervals = [0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1]
-        self.output_arr = [round(self.output_intervals[a] * self.total_steps, 0) for a in range(len(self.output_intervals))]
+        self.output_arr = [round(self.output_intervals[a] * self.total_steps, 0) for a in
+                           range(len(self.output_intervals))]
 
         self.interval_step = self.total_steps / intervals
         self.interval_arr = [round(self.interval_step * i) for i in range(intervals)]
 
-
     # print(self.interval_arr)
 
-    def set_xflux(self, all_comps=False, comps=None, type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1,
+    def set_xflux(self, all_comps=False, comps=None, flux_type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1,
                   z=-0.85):
-
-        xflux_params = []
-        xflux_comps = []
 
         for i in range(len(comps)):
             for j in range(len(self.comp_arr)):
-                if comps[i] == self.comp_arr[j] or all_comps:
-                    xflux_comps.append(self.comp_arr[j])
-                    params = []  # array of the xflux settings for a compartments
-                    params.append(j)  # compartment number
-                    if type == "dynamic":
-                        params.append(0)  # whether xflux is static or dynamic
-                    elif type == "static":
-                        params.append(1)
-                    params.append(start_t)
-                    params.append(end_t)
-                    params.append(x_conc)
-                    params.append(z)
-                    params.append(flux_rate)
-                    xflux_params.append(params)
+                if comps[i] == self.comp_arr[j].name or all_comps:
+                    self.comp_arr[j].xflux_switch = True
+                    self.comp_arr[j].xflux_params["type"] = flux_type  # whether xflux is static or dynamic
+                    self.comp_arr[j].xflux_params["start_t"] = start_t
+                    self.comp_arr[j].xflux_params["end_t"] = end_t
+                    self.comp_arr[j].xflux_params["x_conc"] = x_conc
+                    self.comp_arr[j].xflux_params["z"] = z
+                    self.comp_arr[j].xflux_params["flux_rate"] = flux_rate
 
-        with h5py.File(self.file_name, mode='a') as self.hdf:
-            xflux_group = self.hdf.get("X-FLUX")
-            xflux_setup = xflux_group.create_dataset("X-FLUX SETUP", data=xflux_params)
-            for c in range(len(xflux_comps)):
-                xflux_group.create_dataset("X-FLUX " + xflux_comps[c], data=[])
+        # with h5py.File(self.file_name, mode='a') as self.hdf:
+        # xflux_group = self.hdf.get("X-FLUX")
+        # xflux_setup = xflux_group.create_dataset("X-FLUX SETUP", data=self.xflux_params)
+        # for c in range(len(xflux_comps)):
+        # xflux_group.create_dataset("X-FLUX " + xflux_comps[c], data=[])
 
     # xflux_params is a dictionary sent to compartments that have the xflux_switch on
 
@@ -216,8 +207,10 @@ class simulator:
     def run_simulation(self):
 
         self.start_t = time.time()
-        while self.run_t < self.total_t:
+        for i in range(len(self.comp_arr)):
+            self.comp_arr[i].dt = self.dt
 
+        while self.run_t < self.total_t:
 
             if self.ED_on:
                 self.ed_dict_arr = []
@@ -233,8 +226,7 @@ class simulator:
                     # step for each compartment
 
                     if a.xflux_switch and \
-                            (a.xflux_params["start_t"] <= self.run_t <= a.xflux_params[
-                                "end_t"]):
+                            (a.xflux_params["start_t"] <= self.run_t <= a.xflux_params["end_t"]):
                         a.x_flux()
 
                     if a.zflux_switch and \
@@ -266,7 +258,7 @@ class simulator:
                     d.update_volumes(self.dt, self.osm_o,
                                      self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
 
-                for f in range(len(self.output_arr)):
+                for f in range(len(self.output_arr) - 1):
                     if self.steps == self.output_arr[f]:
                         if f == 2:
                             self.one_percent_t = time.time() - self.start_t
@@ -280,7 +272,7 @@ class simulator:
                                 round(time.time() - self.start_t, 2)) + " s")
 
                 if self.interval_num < len(self.interval_arr):
-                    if self.steps == self.interval_arr[self.interval_num] :
+                    if self.steps == self.interval_arr[self.interval_num]:
                         self.interval_num += 1
                         self.save_to_file()
 
@@ -289,7 +281,7 @@ class simulator:
             self.run_t += self.dt
 
         print("100.0 % complete in " + str(
-                                round(time.time() - self.start_t, 2)) + " s")
+            round(time.time() - self.start_t, 2)) + " s")
         self.end_t = time.time()
 
     """elif not self.ED_on:  # if you want to run with normal diffusion not ED

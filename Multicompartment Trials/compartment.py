@@ -153,7 +153,7 @@ class Compartment:
 
         if self.cl_i < 0:
             print("Cl_i = " + str(self.cl_i))
-            print("d_Cl_i = " + str(self.d_cl_arr[-1]))
+            print("d_Cl_i = " + str(self.d_cl_i))
             raise Exception("chloride log can't have a negative number")
         # self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
 

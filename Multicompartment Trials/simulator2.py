@@ -1,6 +1,6 @@
 """
 
-Control the functioning of the Neural Physiological Emulator (PHANTOM)
+Control the functioning of the Neural Physiological Emulator
 
 
 """
@@ -247,10 +247,9 @@ class simulator:
 
                     # makes an array of all the ED conc changes
                 self.c2 = 0
-                for c in self.gen_comps(self.comp_arr[0:-2]):
-                    c.ed_update(self.ed_conc_changes_arr[self.c2],
-                                "positive")
-                    c.ed_update(self.ed_conc_changes_arr[self.c2], "negative")
+                for c in range(len(self.ed_conc_changes_arr)):
+                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[self.c2], "positive")
+                    self.comp_arr[c+1].ed_update(self.ed_conc_changes_arr[self.c2], "negative")
                     self.c2 = + 1
                     # appending the electrodiffusion concentrations for each compartment
 

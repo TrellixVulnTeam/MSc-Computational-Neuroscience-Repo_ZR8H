@@ -34,7 +34,7 @@ import h5py
 
 class Compartment:
 
-    def __init__(self, compartment_name, radius=5e-5, length=10e-5):
+    def __init__(self, compartment_name, radius=1e-5, length=10e-5):
 
         self.name = compartment_name
         self.radius = radius  # in dm
@@ -178,13 +178,14 @@ class Compartment:
         self.cl_i = self.cl_i * self.w / self.w2
         self.x_i = self.x_i * self.w / self.w2
 
-        self.w = self.w2
-
         if constant_ar:
             self.ar = self.ar
         else:
-            self.ar = self.sa / self.w
+            self.radius = np.sqrt(self.w2/(self.length*np.pi))
+            self.sa = 2 * np.pi * self.radius * self.length
+            self.ar = self.sa / self.w2
 
+        self.w = self.w2
         self.FinvCAr = F / (cm * self.ar)
 
 
@@ -227,15 +228,15 @@ class Compartment:
         Receives a dictionary and update
         """
         if sign == "positive":
-            self.na_i += ed_change["na"]
-            self.cl_i += ed_change["cl"]
-            self.k_i += ed_change["k"]
-            self.x_i += ed_change["x"]
+            self.na_i += (ed_change["na"]/self.length)
+            self.cl_i += (ed_change["cl"]/self.length)
+            self.k_i += (ed_change["k"]/self.length)
+            self.x_i += (ed_change["x"]/self.length)
         elif sign == "negative":
-            self.na_i -= ed_change["na"]
-            self.cl_i -= ed_change["cl"]
-            self.k_i -= ed_change["k"]
-            self.x_i -= ed_change["x"]
+            self.na_i -= (ed_change["na"]/self.length)
+            self.cl_i -= (ed_change["cl"]/self.length)
+            self.k_i -= (ed_change["k"]/self.length)
+            self.x_i -= (ed_change["x"]/self.length)
 
     def get_ed_dict(self):
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}

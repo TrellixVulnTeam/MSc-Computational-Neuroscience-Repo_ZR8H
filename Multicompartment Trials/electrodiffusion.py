@@ -66,7 +66,7 @@ class Electrodiffusion:
         """
 
         self.ed_change_dict = {"na": 0, "k": 0, "cl": 0, "x": 0}
-        self.ed_change_arr = [] #array which will be save as the dataset
+        self.ed_change_arr = [] #array which will be saved as the dataset
         dv = comp_a_ed_dict["Vm"] - comp_b_ed_dict["Vm"]
         ions = list(self.ed_change_dict)
 

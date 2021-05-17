@@ -8,11 +8,13 @@ Analgous to the diffusion class from Kira and Chris
 @author: eshor
 """
 
+
 from common import T, RTF,val,diff_constants
 from compartment import Compartment
 from constants import k,q,valence
 import pandas as pd
 import h5py
+import numba
 
 
 class Electrodiffusion:
@@ -45,7 +47,7 @@ class Electrodiffusion:
         j_diffusion = -1 * d * dc / self.dx
         return j_diffusion
         
-        
+
     def calc_drift(self,ion = "",conc_a=0, conc_b=0,dV=0,):
         """
         Calculates Ohm's law for Drift
@@ -56,7 +58,8 @@ class Electrodiffusion:
         j_drift = - (d / RTF * z * dV / self.dx) * (conc_a + conc_b)
         # Chris and Kira have a odd way of calculating the difference in concentration
         return j_drift
-    
+
+
     def calc_ed(self,dt=1e-3, comp_a_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0},comp_b_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0}):
         """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector
 

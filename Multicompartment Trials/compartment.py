@@ -19,7 +19,8 @@ of the compartment back to the simulation get_df_array: sends the dataframe arra
 
 ##################################################################################
 # IMPORTS
-
+import string
+import pip
 import numpy as np
 
 from common import \
@@ -29,10 +30,13 @@ from constants import F
 import h5py
 
 
+
 ##################################################################################
 # COMPARTMENT CLASS
 
+
 class Compartment:
+
 
     def __init__(self, compartment_name, radius=1e-5, length=10e-5):
 
@@ -98,6 +102,7 @@ class Compartment:
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
 
+
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,
              constant_j_atp=False, p=(10 ** -1) / F,
@@ -105,15 +110,6 @@ class Compartment:
 
         ### ACCESSING LATEST DATASET FOR THAT COMPARTMENT
 
-
-
-        """
-        Perform a time step for the specific compartment.
-
-
-
-        """
-        # 1) Zeroing deltas
 
         self.d_na_i, self.d_k_i, self.d_cl_i, self.d_x_i = 0, 0, 0, 0
 
@@ -164,6 +160,7 @@ class Compartment:
         self.na_i = self.na_i + self.d_na_i
         self.k_i = self.k_i + self.d_k_i
         self.cl_i = self.cl_i + self.d_cl_i
+
 
     def update_volumes(self, dt, osm_o=1, constant_ar=False):
         """ Calculates the new compartment volume (dm3)
@@ -223,6 +220,7 @@ class Compartment:
 
         self.xflux_arr.append(self.xflux * 1000)
 
+
     def ed_update(self, ed_change: dict, sign="positive"):
         """
         Receives a dictionary and update
@@ -238,6 +236,7 @@ class Compartment:
             self.k_i -= (ed_change["k"]/self.length)
             self.x_i -= (ed_change["x"]/self.length)
 
+
     def get_ed_dict(self):
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}
         return ed_dict
@@ -247,6 +246,7 @@ class Compartment:
                   "cl": self.cl_i , "x": self.x_i, "z": self.z_i, "vm": self.v, "e_k": self.E_k,"e_cl": self.E_cl}
         return df_dict
 
+
     def get_array(self,time=0):
         array = [time,self.radius,self.length, self.w,
                  self.na_i, self.k_i, self.cl_i , self.x_i, self.z_i,
@@ -255,6 +255,7 @@ class Compartment:
                  self.d_cl_i, self.d_cl_leak, self.d_cl_kcc2,
                  self.v, self.E_k, self.E_cl]
         return array
+
 
     def x_flux(self):
         """

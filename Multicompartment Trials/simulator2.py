@@ -5,6 +5,8 @@ Control the functioning of the Neural Physiological Emulator
 
 """
 
+
+
 import compartment
 import electrodiffusion
 from common import F
@@ -12,7 +14,7 @@ import numpy as np
 import time
 import pandas as pd
 import h5py
-
+import numba
 
 class simulator:
 
@@ -172,6 +174,7 @@ class simulator:
         self.xoflux_switch = True
         self.xoflux_params = {"start_t": start_t, "end_t": end_t, "xo_conc": xo_conc, "zo": z}
 
+
     def gen_comps(self, comp=[compartment]):
         for i in range(len(comp)):
             yield (comp[i])
@@ -179,6 +182,7 @@ class simulator:
     def gen_run_t(self, run_time_arr=[]):
         for i in run_time_arr:
             yield run_time_arr[i]
+
 
     def xoflux(self):
 
@@ -203,6 +207,7 @@ class simulator:
 
         else:
             return
+
 
     def run_simulation(self):
 
@@ -291,6 +296,7 @@ class simulator:
                 dataframe for each compartment
                 self.comp_arr[a].update_arrays()
                 #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""
+
 
     def save_to_file(self):
 

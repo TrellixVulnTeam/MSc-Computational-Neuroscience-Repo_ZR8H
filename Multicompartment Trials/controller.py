@@ -7,6 +7,7 @@ import compartment
 import simulator2
 import pandas as pd
 import h5py
+import numba
 
 file_name = "test1"
 # 1) CREATE COMPARTMENTS:

@@ -133,7 +133,7 @@ class simulator:
 
     # print(self.interval_arr)
 
-    def set_xflux(self, all_comps=False, comps=None, flux_type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1,
+    def set_xflux(self, all_comps=False, comps=None, flux_type='dynamic', start_t=0, end_t=0, x_conc=1e-3, flux_rate=1e-5,
                   z=-0.85):
 
         for i in range(len(comps)):

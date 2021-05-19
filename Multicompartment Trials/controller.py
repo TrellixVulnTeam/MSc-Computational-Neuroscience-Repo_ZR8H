@@ -8,7 +8,7 @@ import simulator2
 import pandas as pd
 import h5py
 
-file_name = "test"
+file_name = "test1"
 # 1) CREATE COMPARTMENTS:
 comp1 = compartment.Compartment("Comp1")
 comp1.set_ion_properties()
@@ -37,11 +37,11 @@ sim.set_electrodiffusion_properties(ED_on=True)
 sim.set_external_ion_properties()
 sim.set_j_atp(constant_j_atp=False)
 sim.set_area_scale(constant_ar=False)
-total_t =600
-time_step =0.001*1e-3
-sim.set_timing(total_t=10, time_step=1e-6, intervals=1000)
+total_t = 20*60
+time_step = 1e-5
+sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
 
-#sim.set_xflux(comps=["Comp2"], flux_type="dynamic", start_t=0.2, end_t=0.8, x_conc=1e-7, z=-1.0)
+sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=240, end_t=700, x_conc=1e-3, z=-1.0, flux_rate=0.2*1e-3/60)
 # sim.set_zflux()
 ##sim.set_xoflux()
 #run_t_arr = np.arange[0:total_t:time_step]

@@ -41,7 +41,7 @@ class Electrodiffusion:
         F = -D*dc/dx
         """
         d = diff_constants[ion]
-        dc = conc_b - conc_a
+        dc = conc_a - conc_b
         j_diffusion = -1 * d * dc / self.dx
         return j_diffusion
         

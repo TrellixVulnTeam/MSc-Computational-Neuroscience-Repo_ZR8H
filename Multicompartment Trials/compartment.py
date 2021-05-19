@@ -26,7 +26,6 @@ from common import \
     gk, gna, gcl, \
     pw, vw, RTF, cm
 from constants import F
-import h5py
 
 
 ##################################################################################
@@ -105,8 +104,6 @@ class Compartment:
 
         ### ACCESSING LATEST DATASET FOR THAT COMPARTMENT
 
-
-
         """
         Perform a time step for the specific compartment.
 
@@ -155,6 +152,11 @@ class Compartment:
             print("Cl_i = " + str(self.cl_i))
             print("d_Cl_i = " + str(self.d_cl_i))
             raise Exception("chloride log can't have a negative number")
+
+        if self.k_i < 0:
+            print("k_i = " + str(self.k_i))
+            print("d_k_i = " + str(self.d_k_i))
+            raise Exception("[K+] <0 --  log can't have a negative number")
         # self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
 
         # self.d_x_i = - self.dt * self.ar * self.z_i * (self.g_x *
@@ -181,14 +183,12 @@ class Compartment:
         if constant_ar:
             self.ar = self.ar
         else:
-            self.radius = np.sqrt(self.w2/(self.length*np.pi))
+            self.radius = np.sqrt(self.w2 / (self.length * np.pi))
             self.sa = 2 * np.pi * self.radius * self.length
             self.ar = self.sa / self.w2
 
         self.w = self.w2
         self.FinvCAr = F / (cm * self.ar)
-
-
 
     def update_arrays(self):
         """
@@ -227,30 +227,32 @@ class Compartment:
         """
         Receives a dictionary and update
         """
+
         if sign == "positive":
-            self.na_i += (ed_change["na"]/self.length)
-            self.cl_i += (ed_change["cl"]/self.length)
-            self.k_i += (ed_change["k"]/self.length)
-            self.x_i += (ed_change["x"]/self.length)
+            self.na_i += (ed_change["na"] / self.length)
+            self.cl_i += (ed_change["cl"] / self.length)
+            self.k_i += (ed_change["k"] / self.length)
+            self.x_i += (ed_change["x"] / self.length)
         elif sign == "negative":
-            self.na_i -= (ed_change["na"]/self.length)
-            self.cl_i -= (ed_change["cl"]/self.length)
-            self.k_i -= (ed_change["k"]/self.length)
-            self.x_i -= (ed_change["x"]/self.length)
+            self.na_i -= (ed_change["na"] / self.length)
+            self.cl_i -= (ed_change["cl"] / self.length)
+            self.k_i -= (ed_change["k"] / self.length)
+            self.x_i -= (ed_change["x"] / self.length)
 
     def get_ed_dict(self):
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}
         return ed_dict
 
-    def get_df_dict(self,time=0):
-        df_dict = {"time":time,"name": self.name, "radius": self.radius, "length": self.length, "volume": self.w, "na": self.na_i, "k": self.k_i,
-                  "cl": self.cl_i , "x": self.x_i, "z": self.z_i, "vm": self.v, "e_k": self.E_k,"e_cl": self.E_cl}
+    def get_df_dict(self, time=0):
+        df_dict = {"time": time, "name": self.name, "radius": self.radius, "length": self.length, "volume": self.w,
+                   "na": self.na_i, "k": self.k_i,
+                   "cl": self.cl_i, "x": self.x_i, "z": self.z_i, "vm": self.v, "e_k": self.E_k, "e_cl": self.E_cl}
         return df_dict
 
-    def get_array(self,time=0):
-        array = [time,self.radius,self.length, self.w,
-                 self.na_i, self.k_i, self.cl_i , self.x_i, self.z_i,
-                 self.d_na_i,self.d_na_leak, self.d_na_atpase,
+    def get_array(self, time=0):
+        array = [time, self.radius, self.length, self.w,
+                 self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i,
+                 self.d_na_i, self.d_na_leak, self.d_na_atpase,
                  self.d_k_i, self.d_k_leak, self.d_k_atpase, self.d_k_kcc2,
                  self.d_cl_i, self.d_cl_leak, self.d_cl_kcc2,
                  self.v, self.E_k, self.E_cl]
@@ -264,7 +266,7 @@ class Compartment:
         if self.xflux_setup:
             # starting values for flux
             self.x_start, self.z_start = self.x_i, self.z_i
-            self.static_xflux = (self.xflux_params["flux_rate"] / 60) / self.dt
+            self.static_xflux = (self.xflux_params["flux_rate"]) * self.dt
             self.x_final = self.x_i + self.xflux_params["x_conc"]
             self.osmo_final = (self.x_start * self.z_start) + (self.xflux_params["x_conc"] * self.xflux_params["z"])
             self.z_final = self.osmo_final / self.x_final

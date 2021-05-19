@@ -31,7 +31,7 @@ class simulator:
                 self.hdf.create_group("X-FLUX")
                 self.hdf.create_group("SYNAPSES")
                 print("simulation file ('" + file_name + "') created")
-
+                print(self.file_name)
 
         except:
             raise ("file not created")

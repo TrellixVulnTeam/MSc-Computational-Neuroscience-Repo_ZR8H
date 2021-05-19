@@ -9,7 +9,7 @@ import pandas as pd
 import h5py
 import numba
 
-file_name = "test1"
+file_name = "test2"
 # 1) CREATE COMPARTMENTS:
 comp1 = compartment.Compartment("Comp1")
 comp1.set_ion_properties()

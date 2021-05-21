@@ -85,7 +85,7 @@ class Compartment:
         self.osm_i_arr, self.osm_o_arr = [], []
         self.xflux_arr, self.zflux_arr, self.xo_arr = [], [], []
 
-    def set_ion_properties(self, na_i=14.002e-3, k_i=122.873e-3, cl_i=5.163e-3, x_i=154.962e-3, z_i=-0.85,
+    def set_ion_properties(self, na_i=14.001840415288e-3, k_i=122.870162657e-3, cl_i=5.1653366e-3, x_i=154.972660318083e-3, z_i=-0.85,
                            osmol_neutral_start=True):
         """
 

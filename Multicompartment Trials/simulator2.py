@@ -30,8 +30,7 @@ class simulator:
                 self.hdf.create_group("TIMING")
                 self.hdf.create_group("X-FLUX")
                 self.hdf.create_group("SYNAPSES")
-                print("simulation file ('" + file_name + "') created")
-                print(self.file_name)
+                print("simulation file ('" + file_name + "') created in base directory")
 
         except:
             raise ("file not created")
@@ -75,6 +74,24 @@ class simulator:
 
         self.num_comps += 1
         self.comp_arr.append(comp)
+
+    def add_default_multicompartment(self,number_of_comps=9):
+        """Sets the simulation to run with the default multicompartment model -- 9 compartments + 1 soma"""
+
+        soma = compartment.Compartment("Comp0_Soma",radius=5e-5, length=50e-5)
+        soma.set_ion_properties()
+        self.add_compartment(soma)
+        # The soma is a compartment with dimensions 5X that of a compartment
+
+
+        for i in range(number_of_comps):
+            comp = compartment.Compartment("Comp"+str(i+1))
+            comp.set_ion_properties()
+            self.add_compartment(comp)
+
+
+
+
 
     def set_electrodiffusion_properties(self, ED_on=True):
         self.ED_on = ED_on

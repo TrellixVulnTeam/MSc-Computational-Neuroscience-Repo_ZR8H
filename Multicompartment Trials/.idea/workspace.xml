@@ -55,7 +55,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="ignore.virus.scanning.warn.message" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../sim_data.h5" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../Kira Code/model-of-neuronal-chloride-homeostasis-master/plm_singlecomp_withkcc2.py" />
     <property name="settings.editor.selected.configurable" value="PyConsoleConfigurable.Python Console" />
   </component>
   <component name="PyConsoleOptionsProvider">
@@ -208,6 +208,7 @@
       <workItem from="1621923613066" duration="2827000" />
       <workItem from="1622013878696" duration="4735000" />
       <workItem from="1622209431683" duration="2717000" />
+      <workItem from="1622468724642" duration="1646000" />
     </task>
     <servers />
   </component>

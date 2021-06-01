@@ -5,20 +5,22 @@ Control the functioning of the Neural Physiological Emulator
 
 """
 
+import time
+
+import h5py
+import numpy as np
+import pandas as pd
+
 import compartment
 import electrodiffusion
 from common import F
-import numpy as np
-import time
-import pandas as pd
-import h5py
-import numba
 
 
 class simulator:
 
     def __init__(self, file_name=""):
         """ Compartments array needs to be in the format of compartment class"""
+
         self.file_name = file_name
         self.file_name = "\ " + file_name
 
@@ -32,30 +34,22 @@ class simulator:
                 print("simulation file ('" + file_name + "') created in base directory")
 
         except:
-            raise ("file not created")
-
-        # COMPS = hdf.put('COMPARTMENTS/COMP1', df_comp1, format='table')
-        # ELECTRODIFFUSION = hdf.create_group('ELECTRODIFFUSION')
+            raise Exception("File not created")
 
         self.num_comps = 0
-        self.run_t = 0
-        self.start_t = time.time()
         self.one_percent_t = 0
-        self.end_t = 0
         self.interval_num = 1
         self.steps = 0
-
-        self.output_arr = []
-        self.output_intervals = []
+        self.output_arr, self.output_intervals = [], []
         self.ED_on = True
+        self.ed_setup_arr = []
         self.ed_dict_arr, self.ed_conc_changes_arr = [], []
         self.constant_j_atp, self.constant_ar = False, False
-        self.ed_arr = []
-        self.comp_arr = []
+        self.comp_arr, self.ed_arr = [], []
         self.external_xflux_setup, self.xflux_setup, self.zflux_setup = True, True, True
         self.na_o, self.k_o, self.cl_o, self.x_o, self.z_o, self.osm_o = 0, 0, 0, 0, 0, 0
         self.p = 0
-        self.total_t, self.dt = 0, 0
+        self.start_t, self.end_t, self.run_t, self.total_t, self.dt = 0, 0, 0, 0, 0
         self.xflux_names_arr = []
         self.xflux_dict = {}
         self.xoflux_switch = False
@@ -118,7 +112,6 @@ class simulator:
 
     def set_electrodiffusion_properties(self, ED_on=True):
         self.ED_on = ED_on
-        self.ed_setup_arr = []
         with h5py.File(self.file_name, mode='a') as self.hdf:
             comp_group = self.hdf.get('COMPARTMENTS')
             ed_group = self.hdf.get('ELECTRODIFFUSION')
@@ -280,8 +273,7 @@ class simulator:
         while self.run_t < self.total_t:
 
             if self.ED_on:
-                self.ed_dict_arr = []
-                self.ed_conc_changes_arr = []
+                self.ed_dict_arr, self.ed_conc_changes_arr = [], []
 
                 for a in self.gen_comps(self.comp_arr):
 

@@ -75,22 +75,11 @@ class Compartment:
 
         self.dt, self.syn_t_on, self.syn_t_off = 0, 0, 0  # Timing
 
-        self.na_arr, self.k_arr, self.cl_arr, self.x_arr, self.z_arr = [], [], [], [], []
-        self.d_na_arr, self.d_na_leak_arr, self.d_na_atpase_arr = [], [], []
-        self.d_k_arr, self.d_k_leak_arr, self.d_k_atpase_arr, self.d_k_kcc2_arr = [], [], [], []
-        self.d_cl_arr, self.d_cl_leak_arr, self.d_cl_kcc2_arr = [], [], []
-        self.j_p_arr = []
-        self.v_arr, self.E_k_arr, self.E_cl_arr, self.drivingf_cl_arr = [], [], [], []
-        self.w_arr, self.d_w_arr, self.ar_arr = [], [], []
-        self.osm_i_arr, self.osm_o_arr = [], []
-        self.xflux_arr, self.zflux_arr, self.xo_arr = [], [], []
-
-    def set_ion_properties(self, na_i=14.001840415288e-3, k_i=122.870162657e-3, cl_i=5.1653366e-3, x_i=154.972660318083e-3, z_i=-0.85,
+    def set_ion_properties(self, na_i=14.001840415288e-3, k_i=122.870162657e-3, cl_i=5.1653366e-3,
+                           x_i=154.972660318083e-3, z_i=-0.85,
                            osmol_neutral_start=True):
         """
-
         - Adjustment of starting concentrations to ensure starting electroneutrality
-
         """
         self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i = na_i, k_i, cl_i, x_i, z_i  # Intracellular ion conc.
         self.na_i_start, self.x_start, self.z_start = na_i, x_i, z_i
@@ -101,17 +90,10 @@ class Compartment:
              na_o=0, k_o=0, cl_o=0,
              constant_j_atp=False, p=(10 ** -1) / F,
              p_kcc2=2e-3 / F):
-
-        ### ACCESSING LATEST DATASET FOR THAT COMPARTMENT
-
         """
         Perform a time step for the specific compartment.
-
-
-
         """
         # 1) Zeroing deltas
-
         self.d_na_i, self.d_k_i, self.d_cl_i, self.d_x_i = 0, 0, 0, 0
 
         # 2) Updating voltages
@@ -130,19 +112,14 @@ class Compartment:
         self.j_kcc2 = p_kcc2 * (self.E_k - self.E_cl)
 
         # 4) Solve ion flux equations for t+dt from t
-
         self.d_na_leak = - dt * self.ar * gna * (self.v + RTF * np.log(self.na_i / na_o))
         self.d_na_atpase = - dt * self.ar * (+3 * self.j_p)
         self.d_na_i = self.d_na_leak + self.d_na_atpase
-        # self.d_na_i = - self.dt * self.ar * (
-        # self.g_na * (self.v + RTF * np.log(self.na_i / self.na_o)) + 3 * self.j_p)
 
         self.d_k_leak = - dt * self.ar * gk * (self.v + RTF * np.log(self.k_i / k_o))
         self.d_k_atpase = - dt * self.ar * (- 2 * self.j_p)
         self.d_k_kcc2 = - dt * self.ar * (- self.j_kcc2)
         self.d_k_i = self.d_k_leak + self.d_k_atpase + self.d_k_kcc2
-        # self.d_k_i = - self.dt * self.ar * (
-        # self.g_k * (self.v + RTF * np.log(self.k_i / self.k_o)) - 2 * self.j_p - self.j_kcc2)
 
         self.d_cl_leak = + dt * self.ar * gcl * (self.v + RTF * np.log(cl_o / self.cl_i))
         self.d_cl_kcc2 = + dt * self.ar * self.j_kcc2
@@ -157,10 +134,6 @@ class Compartment:
             print("k_i = " + str(self.k_i))
             print("d_k_i = " + str(self.d_k_i))
             raise Exception("[K+] <0 --  log can't have a negative number")
-        # self.d_cl_i = + self.dt * self.ar * (self.g_cl * (self.v + RTF * np.log(self.cl_o / self.cl_i)) + self.j_kcc2)
-
-        # self.d_x_i = - self.dt * self.ar * self.z_i * (self.g_x *
-        #                                              (self.v - (RTF/self.z_i*np.log(self.x_o/self.x_temp))))
 
         # 5) Update ion concentrations
         self.na_i = self.na_i + self.d_na_i
@@ -189,39 +162,6 @@ class Compartment:
 
         self.w = self.w2
         self.FinvCAr = F / (cm * self.ar)
-
-    def update_arrays(self):
-        """
-        Update arrays such that they reflect the actual values
-        """
-        self.na_arr.append(self.na_i * 1000)
-        self.k_arr.append(self.k_i * 1000)
-        self.cl_arr.append(self.cl_i * 1000)
-        self.x_arr.append(self.x_i * 1000)
-        self.d_na_arr.append(self.d_na_i * 1000)
-        self.d_na_leak_arr.append(self.d_na_leak * 1000)
-        self.d_na_atpase_arr.append(self.d_na_atpase * 1000)
-        self.d_k_arr.append(self.d_k_i * 1000)
-        self.d_k_leak_arr.append(self.d_k_leak * 1000)
-        self.d_k_atpase_arr.append(self.d_k_atpase * 1000)
-        self.d_k_kcc2_arr.append(self.d_k_kcc2 * 1000)
-        self.d_cl_arr.append(self.d_cl_i * 1000)
-        self.d_cl_leak_arr.append(self.d_cl_leak * 1000)
-        self.d_cl_kcc2_arr.append(self.d_cl_kcc2 * 1000)
-
-        self.z_arr.append(self.z_i)
-        self.w_arr.append(self.w * (10 ** 12))
-        self.ar_arr.append(self.ar)
-        self.v_arr.append(self.v * 1000)
-
-        self.j_p_arr.append(self.j_p)
-        self.d_w_arr.append(self.dw * 1000)
-        self.E_k_arr.append(self.E_k * 1000)
-        self.E_cl_arr.append(self.E_cl * 1000)
-        self.drivingf_cl_arr.append(self.drivingf_cl * 1000)
-        self.osm_i_arr.append(self.osm_i * 1000)
-
-        self.xflux_arr.append(self.xflux * 1000)
 
     def ed_update(self, ed_change: dict, sign="positive"):
         """
@@ -282,11 +222,10 @@ class Compartment:
             self.d_xflux = self.alpha - np.e ** (self.beta * self.t_xflux)
             self.xflux = self.d_xflux * self.xflux_params["x_conc"]
             self.zflux = self.d_xflux * self.z_diff  # z can adjust at the same rate as x
-            # self.temp_osmo = self.x_i * self.z_i + self.xflux * z
             self.total_x_flux += self.xflux
             self.x_i = self.x_start + self.xflux
             self.z_i = self.z_start + self.zflux
-            # self.z_i = self.temp_osmo / self.x_i
+
 
         elif self.xflux_params["type"] == 'static':
             self.total_x_flux += self.static_xflux

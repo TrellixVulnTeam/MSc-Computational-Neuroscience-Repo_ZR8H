@@ -188,8 +188,8 @@ class simulator:
         if comps is None or comps == []:
             xflux_data_arr.append(-1)  # value -1 means no compartment has been specified
         else:
-            for i in range(len(comps)):
-                if comps[i] == self.comp_arr[i].name:
+            for i in range(len(self.comp_arr)):
+                if comps[0] == self.comp_arr[i].name:
                     xflux_data_arr.append(i)
 
         if flux_type == 'static':

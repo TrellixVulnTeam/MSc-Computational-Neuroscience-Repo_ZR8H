@@ -301,7 +301,7 @@ class simulator:
                     # electrodiffusion dictionary for each compartment
 
                 for b in range(len(self.ed_arr)):
-                    self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.ed_dict_arr[b],
+                    self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.comp_arr[b].w, self.ed_dict_arr[b],
                                                                            self.ed_dict_arr[b + 1]))
 
                     # makes an array of all the ED conc changes

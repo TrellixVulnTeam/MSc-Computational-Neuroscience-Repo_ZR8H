@@ -30,7 +30,9 @@ class Electrodiffusion:
         self.name = comp_a_name +  ' <-> ' + comp_b_name
         self.comp_a = comp_a_name
         self.comp_b = comp_b_name
-        self.dx =comp_a_length/2 + comp_b_length/2
+        self.comp_a_length = comp_a_length
+        self.comp_b_length = comp_b_length
+        self.dx =self.comp_a_length/2 + self.comp_b_length/2
         #self.bound_na_arr, self.bound_k_arr,self.bound_cl_arr,self.bound_x_arr = [],[],[],[] #arr of the various changes occuring at the boundary
 
         self.ed_setup = [self.name,self.comp_a,self.comp_b,self.dx]
@@ -60,12 +62,13 @@ class Electrodiffusion:
         return j_drift
 
 
-    def calc_ed(self,dt=1e-3, comp_a_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0},comp_b_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0}):
+    def calc_ed(self,dt=1e-3, volume_a= 3.1415*1e-14,comp_a_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0},comp_b_ed_dict={"na":0,"k":0, "cl":0,"x":0,"Vm":0}):
         """Incorporates both diffusion and drift and returns an answer in Molar/s as a vector
 
         * Note that the flux between compartment a to b = flux from b to a
         In Chris' electrodiffusion updates he divides the drift by 2 ... Not too sure why?
 
+        For correct running of electrodiffusion, MOLES of ions not concentrations need to be calculated.
         """
 
         self.ed_change_dict = {"na": 0, "k": 0, "cl": 0, "x": 0}
@@ -78,6 +81,7 @@ class Electrodiffusion:
             self.ed_change_dict[ion] += self.calc_drift(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion], dv)/2
             self.ed_change_dict[ion] += self.calc_diffusion(ion, comp_a_ed_dict[ion], comp_b_ed_dict[ion])
             self.ed_change_dict[ion] *= dt
+            self.ed_change_dict[ion] *= volume_a #to get the actual mol moving across, this will be divided again in each compartment to get the concentration
             self.ed_change_arr.append(self.ed_change_dict[ion])
 
         return self.ed_change_dict

@@ -169,15 +169,15 @@ class Compartment:
         """
 
         if sign == "positive":
-            self.na_i += (ed_change["na"] / self.length)
-            self.cl_i += (ed_change["cl"] / self.length)
-            self.k_i += (ed_change["k"] / self.length)
-            self.x_i += (ed_change["x"] / self.length)
+            self.na_i += (ed_change["na"] / self.length)/ self.w
+            self.cl_i += (ed_change["cl"] / self.length) / self.w
+            self.k_i += (ed_change["k"] / self.length) / self.w
+            self.x_i += (ed_change["x"] / self.length) / self.w
         elif sign == "negative":
-            self.na_i -= (ed_change["na"] / self.length)
-            self.cl_i -= (ed_change["cl"] / self.length)
-            self.k_i -= (ed_change["k"] / self.length)
-            self.x_i -= (ed_change["x"] / self.length)
+            self.na_i -= (ed_change["na"] / self.length) / self.w
+            self.cl_i -= (ed_change["cl"] / self.length) / self.w
+            self.k_i -= (ed_change["k"] / self.length) / self.w
+            self.x_i -= (ed_change["x"] / self.length) / self.w
 
     def get_ed_dict(self):
         ed_dict = {"na": self.na_i, "k": self.k_i, "cl": self.cl_i, "x": self.x_i, "Vm": self.v}

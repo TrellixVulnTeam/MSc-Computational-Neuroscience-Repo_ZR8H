@@ -9,7 +9,7 @@ import pandas as pd
 import h5py
 
 
-file_name ="Experiment-B3"
+file_name ="Experiment-B3-2"
 
 
 # 1) DEFINE SIMULATOR CLASS AND ADD COMPARTMENTS
@@ -43,7 +43,7 @@ sim.set_area_scale(constant_ar=False)
 total_t = 6*60
 time_step = 1e-6
 sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
-
+#sim.add_synapse("Comp4","Inhibitory",10,2*1e-3,1e-3)
 sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=60, end_t=180, x_conc=1e-3, z=-2.0, flux_rate=5*1e-3/60)
 #sim.set_xflux(comps=["Comp3"], flux_type="static", start_t=100, end_t=500, x_conc=1e-3, z=-1.0, flux_rate=0.4*1e-3/60)
 # sim.set_zflux()

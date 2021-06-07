@@ -86,6 +86,36 @@ class Compartment:
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
 
+
+    def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
+        self.synapse_type = synapse_type
+        self.syn_start_t = start_t,
+        self.duration = duration
+        self.nt_max = max_neurotransmitter
+        self.alpha = 0.5  # ms-1.mM-1 == Forward rate constant
+        self.beta = 0.1  # ms-1 == Backward rate constant
+        self.r_initial = 0  # ratio of NT bound initially
+        self.r_t = 0  # current ratio of NT bound
+        self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
+        self.tau = 1 / (self.alpha * self.nt_max + self.beta)
+        self.g_synapse = 1 * 10 - 9
+
+    def synapse_step(self, run_t):
+
+        self.r_t = self.r_infinity + (self.r_initial - self.r_infinity) * np.e ** (-(run_t - self.syn_start_t) / self.tau)
+
+        I_syn =0
+
+        if self.synapse_type == 'Inhibitory':
+            I_syn = self.g_synapse * self.r_t * (self.Vm - self.E_cl)
+            I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
+
+            I_syn = I_syn / F  # converting coloumb to mol
+            I_syn = I_syn * self.dt # getting the mol input for the timestep
+            self.cl_i += I_syn /self.w
+
+
+
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,
              constant_j_atp=False, p=(10 ** -1) / F,

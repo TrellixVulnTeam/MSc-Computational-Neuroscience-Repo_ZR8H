@@ -13,6 +13,7 @@ import pandas as pd
 
 import compartment
 import electrodiffusion
+import synapse
 from common import F
 
 
@@ -30,7 +31,7 @@ class simulator:
                 self.hdf.create_group('ELECTRODIFFUSION')
                 self.hdf.create_group("TIMING")
                 self.hdf.create_group("X-FLUX-SETTINGS")
-                self.hdf.create_group("SYNAPSES")
+                self.hdf.create_group("SYNAPSE-SETTINGS")
                 print("simulation file ('" + file_name + "') created in base directory")
 
         except:
@@ -57,6 +58,8 @@ class simulator:
         self.xoflux_setup = True
         self.xo_start, self.cl_o_start, self.d_xoflux, self.xo_final, self.xo_flux, self.t_xoflux = 0, 0, 0, 0, 0, 0
         self.xoflux_points, self.dt_xoflux, self.xo_alpha, self.xo_beta = 0, 0, 0, 0
+        self.synapse_arr =[]
+        self.synapse_names_arr =[]
 
     def add_compartment(self, comp=compartment):
         """Every compartment created needs to be added to the simulator"""
@@ -208,8 +211,7 @@ class simulator:
                     self.comp_arr[j].xflux_params["flux_rate"] = flux_rate
 
         self.xflux_names_arr.append("X-FLUX-" + str(len(self.xflux_names_arr)))  # names of the xflux
-        print(self.xflux_names_arr[-1])
-        print(xflux_data_arr)
+
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
             xflux_group = self.hdf.get("X-FLUX-SETTINGS")
@@ -264,6 +266,46 @@ class simulator:
         else:
             return
 
+    def add_synapse(self,comp_name='', synapse_type='Inhibitory',start_t=0, duration=2*1e-3, max_neurotransmitter = 1e-3):
+        """
+
+        @param synapse_type: either 'Inhibitory' (GABAergic) or 'Excitatory' (Glutamatergic)
+        @param comp: compartment name on which to synapse onto
+        @param start_t: start time for synaptic input
+        @param duration: duration of synaptic input
+        @param max_neurotransmitter: max neurotransmitter concentration
+        @return:
+        """
+        syn_dict = {}
+        syn_dict["compartment"] = comp_name
+
+        if synapse_type == "Inhibitory":
+            syn_dict["synapse_type"] = 0
+        elif synapse_type == "Excitatory":
+            syn_dict["synapse_type"] = 1
+
+        syn_dict["start_t"] = start_t
+        syn_dict["duration"] = duration
+        syn_dict["end_t"] = start_t + duration
+        syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
+
+        self.synapse_arr.append(syn_dict)
+
+        for i in range(len(self.comp_names_arr)):
+            if comp_name == self.comp_names_arr[i]:
+                self.comp_arr[i].set_synapse(synapse_type,start_t,duration,max_neurotransmitter)
+
+        self.synapse_names_arr.append("SYNAPSE-" + str(len(self.synapse_names_arr)))
+
+        with h5py.File(self.file_name, mode='a') as self.hdf:
+            synapse_group = self.hdf.get("SYNAPSE-SETTINGS")
+            syn_data_arr = list(syn_dict.values)
+            synapse_group.create_dataset(name=self.synapse_names_arr[-1], data=syn_data_arr)
+
+        return
+
+
+
     def run_simulation(self):
 
         self.start_t = time.time()
@@ -309,8 +351,15 @@ class simulator:
                 for c in range(len(self.ed_conc_changes_arr)):
                     self.comp_arr[c].ed_update(self.ed_conc_changes_arr[self.c2], "positive")
                     self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[self.c2], "negative")
-                    self.c2 = + 1
+                    self.c2 += 1
                     # appending the electrodiffusion concentrations for each compartment
+
+                for e in range(len(self.synapse_arr)):
+                    if self.run_t >= self.synapse_arr[e]['start_t'] and self.run_t <= self.synapse_arr[e]['end_t']:
+                        for s in range(len(self.comp_arr)):
+                            if self.comp_arr[s].name == self.synapse_names_arr[e]:
+                                self.comp_arr[s].synapse_step(run_t=self.run_t)
+
 
                 for d in self.gen_comps(self.comp_arr):
                     d.update_volumes(self.dt, self.osm_o,

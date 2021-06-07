@@ -277,7 +277,11 @@ class simulator:
         @return:
         """
         syn_dict = {}
-        syn_dict["compartment"] = comp_name
+
+        for i in range(len(self.comp_arr)):
+            if comp_name == self.comp_arr[i].name:
+                comp_num = i
+                syn_dict["compartment"] = comp_num
 
         if synapse_type == "Inhibitory":
             syn_dict["synapse_type"] = 0
@@ -291,15 +295,14 @@ class simulator:
 
         self.synapse_arr.append(syn_dict)
 
-        for i in range(len(self.comp_names_arr)):
-            if comp_name == self.comp_names_arr[i]:
-                self.comp_arr[i].set_synapse(synapse_type,start_t,duration,max_neurotransmitter)
+
+        self.comp_arr[comp_num].set_synapse(synapse_type,start_t,duration,max_neurotransmitter)
 
         self.synapse_names_arr.append("SYNAPSE-" + str(len(self.synapse_names_arr)))
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
             synapse_group = self.hdf.get("SYNAPSE-SETTINGS")
-            syn_data_arr = list(syn_dict.values)
+            syn_data_arr = list(syn_dict.values())
             synapse_group.create_dataset(name=self.synapse_names_arr[-1], data=syn_data_arr)
 
         return

@@ -13,7 +13,7 @@ import pandas as pd
 
 import compartment
 import electrodiffusion
-import synapse
+
 from common import F
 
 
@@ -120,7 +120,7 @@ class simulator:
             ed_group = self.hdf.get('ELECTRODIFFUSION')
 
             for e in range(self.num_comps - 1):
-                name = self.comp_arr[e].name + ' <-> ' + self.comp_arr[e + 1].name
+                name = self.comp_arr[e].name + ' <- ' + self.comp_arr[e + 1].name
                 ed_group.create_group(name)
                 comp_a = comp_group.get(self.comp_arr[e].name)
 
@@ -350,11 +350,11 @@ class simulator:
                                                                            self.ed_dict_arr[b + 1]))
 
                     # makes an array of all the ED conc changes
-                self.c2 = 0
+
                 for c in range(len(self.ed_conc_changes_arr)):
-                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[self.c2], "positive")
-                    self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[self.c2], "negative")
-                    self.c2 += 1
+                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[c], "positive")
+                    self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[c], "negative")
+
                     # appending the electrodiffusion concentrations for each compartment
 
                 for e in range(len(self.synapse_arr)):

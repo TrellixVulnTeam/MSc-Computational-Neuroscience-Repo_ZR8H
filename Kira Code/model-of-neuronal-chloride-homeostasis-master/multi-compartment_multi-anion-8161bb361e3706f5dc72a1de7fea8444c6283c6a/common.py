@@ -5,7 +5,7 @@ Python 3.x targeted
 @author: Chris Currin & Kira Dusterwald
 """
 from constants import F, R
-
+cm = 2e-4
 T = 37 + 273.15
 RTF = R * T / F
 RT = R * T

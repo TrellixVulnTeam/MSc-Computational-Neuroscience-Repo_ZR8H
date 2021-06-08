@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug 22 2016
-Python 3.x targeted
-@author: Chris Currin & Kira Dusterwald
 """
-from constants import F, R
+
+R = 8.31446
+F: float = 96485.33  # Faraday's constant        C mol-1
+k = 1.38e-23  # Boltzmann constant        J K-1
+q = 1.602176620898e-19  # elementary charge         C
+Na = 6.022e23  # Avogadro's constant       mol-1
 
 T = 37 + 273.15
 RTF = R * T / F
@@ -41,7 +43,7 @@ vw = 0.018 #partial molar volume of water, dm3/mol
 pw = 0.0015 #osmotic permeability, biological membrane (muscle? unknown), dm s
 km=5*10**(-14) #extensional rigidity of RBC at 23 deg, Mohandas and Evans (1994), N/dm
 
-default_Cm = 2e-4 #default membrane capacitance (F/dm^2)
+cm = 2e-4 #default membrane capacitance (F/dm^2)
 
 val = {"na":1, "k":1, "cl":-1,"x":-0.85}
 

@@ -41,25 +41,21 @@ class simulator:
         self.one_percent_t = 0
         self.interval_num = 1
         self.steps = 0
-        self.output_arr, self.output_intervals = [], []
         self.ED_on = True
-        self.ed_setup_arr = []
-        self.ed_dict_arr, self.ed_conc_changes_arr = [], []
         self.constant_j_atp, self.constant_ar = False, False
         self.comp_arr, self.ed_arr = [], []
         self.external_xflux_setup, self.xflux_setup, self.zflux_setup = True, True, True
         self.na_o, self.k_o, self.cl_o, self.x_o, self.z_o, self.osm_o = 0, 0, 0, 0, 0, 0
         self.p = 0
         self.start_t, self.end_t, self.run_t, self.total_t, self.dt = 0, 0, 0, 0, 0
-        self.xflux_names_arr = []
         self.xflux_dict = {}
         self.xoflux_switch = False
         self.xoflux_params = {"start_t": 0, "end_t": 0, "xo_conc": 0, "zo": 0}
         self.xoflux_setup = True
         self.xo_start, self.cl_o_start, self.d_xoflux, self.xo_final, self.xo_flux, self.t_xoflux = 0, 0, 0, 0, 0, 0
         self.xoflux_points, self.dt_xoflux, self.xo_alpha, self.xo_beta = 0, 0, 0, 0
-        self.synapse_arr =[]
-        self.synapse_names_arr =[]
+        self.synapse_dict = {}
+        self.synapse_on = False
 
     def add_compartment(self, comp=compartment):
         """Every compartment created needs to be added to the simulator"""
@@ -133,7 +129,6 @@ class simulator:
                 ed = electrodiffusion.Electrodiffusion(comp_a_name=self.comp_arr[e].name, comp_a_length=length_a,
                                                        comp_b_name=self.comp_arr[e + 1].name, comp_b_length=length_b)
                 self.ed_arr.append(ed)
-                self.ed_setup_arr.append(ed.ed_setup)
 
             self.hdf.close()
 
@@ -162,12 +157,14 @@ class simulator:
 
         self.total_steps = self.total_t / self.dt
 
-        self.output_intervals = [0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1]
+        self.output_intervals = (0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1)
         self.output_arr = [round(self.output_intervals[a] * self.total_steps, 0) for a in
                            range(len(self.output_intervals))]
+        self.output_arr = tuple(self.output_arr)
 
         self.interval_step = self.total_steps / intervals
         self.interval_arr = [round(self.interval_step * i) for i in range(intervals)]
+        self.interval_arr = tuple(self.interval_arr)
 
     # print(self.interval_arr)
 
@@ -176,6 +173,7 @@ class simulator:
                   z=-0.85):
 
         xflux_data_arr = []  # array which will be sent to the HDF5 file
+        xflux_names_arr = []
         if all_comps == False:
             xflux_data_arr.append(0)  # value 0 means that all compartments is not selected
         else:
@@ -210,12 +208,11 @@ class simulator:
                     self.comp_arr[j].xflux_params["z"] = z
                     self.comp_arr[j].xflux_params["flux_rate"] = flux_rate
 
-        self.xflux_names_arr.append("X-FLUX-" + str(len(self.xflux_names_arr)))  # names of the xflux
-
+        xflux_names_arr.append("X-FLUX-" + str(len(xflux_names_arr)))  # names of the xflux
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
             xflux_group = self.hdf.get("X-FLUX-SETTINGS")
-            xflux_group.create_dataset(name=self.xflux_names_arr[-1], data=xflux_data_arr)
+            xflux_group.create_dataset(name=xflux_names_arr[-1], data=xflux_data_arr)
 
     def set_zflux(self, all_comps=False, comps=None, start_t=0, end_t=0, z_end=-1):
         """
@@ -266,7 +263,8 @@ class simulator:
         else:
             return
 
-    def add_synapse(self,comp_name='', synapse_type='Inhibitory',start_t=0, duration=2*1e-3, max_neurotransmitter = 1e-3):
+    def add_synapse(self, comp_name='', synapse_type='Inhibitory', start_t=0, duration=2 * 1e-3,
+                    max_neurotransmitter=1e-3):
         """
 
         @param synapse_type: either 'Inhibitory' (GABAergic) or 'Excitatory' (Glutamatergic)
@@ -276,40 +274,38 @@ class simulator:
         @param max_neurotransmitter: max neurotransmitter concentration
         @return:
         """
-        syn_dict = {}
+        self.synapse_on = True
 
         for i in range(len(self.comp_arr)):
             if comp_name == self.comp_arr[i].name:
                 comp_num = i
-                syn_dict["compartment"] = comp_num
+                self.syn_dict["compartment"] = comp_num
 
         if synapse_type == "Inhibitory":
-            syn_dict["synapse_type"] = 0
+            self.syn_dict["synapse_type"] = 0
         elif synapse_type == "Excitatory":
-            syn_dict["synapse_type"] = 1
+            self.syn_dict["synapse_type"] = 1
 
-        syn_dict["start_t"] = start_t
-        syn_dict["duration"] = duration
-        syn_dict["end_t"] = start_t + duration
-        syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
+        self.syn_dict["start_t"] = start_t
+        self.syn_dict["duration"] = duration
+        self.syn_dict["end_t"] = start_t + duration
+        self.syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
 
-        self.synapse_arr.append(syn_dict)
-
-
-        self.comp_arr[comp_num].set_synapse(synapse_type,start_t,duration,max_neurotransmitter)
-
-        self.synapse_names_arr.append("SYNAPSE-" + str(len(self.synapse_names_arr)))
+        self.comp_arr[comp_num].set_synapse(synapse_type, start_t, duration, max_neurotransmitter)
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
+            synapse_name = "SYNAPSE-" + self.comp_arr[comp_num].name
+            syn_data_arr = list(self.syn_dict.values())
             synapse_group = self.hdf.get("SYNAPSE-SETTINGS")
-            syn_data_arr = list(syn_dict.values())
-            synapse_group.create_dataset(name=self.synapse_names_arr[-1], data=syn_data_arr)
+            synapse_group.create_dataset(name=synapse_name, data=syn_data_arr)
 
         return
 
-
-
     def run_simulation(self):
+
+        # converting lists to tuples for speed improvements
+        self.comp_arr = tuple(self.comp_arr)
+        self.ed_arr = tuple(self.ed_arr)
 
         self.start_t = time.time()
         for i in range(len(self.comp_arr)):
@@ -318,7 +314,6 @@ class simulator:
         while self.run_t < self.total_t:
 
             if self.ED_on:
-                self.ed_dict_arr, self.ed_conc_changes_arr = [], []
 
                 for a in self.gen_comps(self.comp_arr):
 
@@ -342,27 +337,19 @@ class simulator:
                             self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
                         self.xoflux()
 
-                    self.ed_dict_arr.append(a.get_ed_dict())
                     # electrodiffusion dictionary for each compartment
 
                 for b in range(len(self.ed_arr)):
-                    self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.comp_arr[b].w, self.ed_dict_arr[b],
-                                                                           self.ed_dict_arr[b + 1]))
-
-                    # makes an array of all the ED conc changes
-
-                for c in range(len(self.ed_conc_changes_arr)):
-                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[c], "positive")
-                    self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[c], "negative")
+                    ed_conc_changes = self.ed_arr[b].calc_ed(self.dt, self.comp_arr[b].w,
+                                                             self.comp_arr[b].get_ed_dict(),
+                                                             self.comp_arr[b + 1].get_ed_dict())
+                    self.comp_arr[b].ed_update(ed_conc_changes, "positive")
+                    self.comp_arr[b + 1].ed_update(ed_conc_changes, "negative")
 
                     # appending the electrodiffusion concentrations for each compartment
-
-                for e in range(len(self.synapse_arr)):
-                    if self.run_t >= self.synapse_arr[e]['start_t'] and self.run_t <= self.synapse_arr[e]['end_t']:
-                        for s in range(len(self.comp_arr)):
-                            if self.comp_arr[s].name == self.synapse_names_arr[e]:
-                                self.comp_arr[s].synapse_step(run_t=self.run_t)
-
+                if self.synapse_on:
+                    if self.run_t >= self.synapse_dict['start_t'] and self.run_t <= self.synapse_dict['end_t']:
+                        self.comp_arr[self.syn_dict["compartment"]].synapse_step(run_t=self.run_t)
 
                 for d in self.gen_comps(self.comp_arr):
                     d.update_volumes(self.dt, self.osm_o,

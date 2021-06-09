@@ -27,17 +27,12 @@ class Electrodiffusion:
         d_ion is a dictionary in the form {'ion': Diffusion coefficient} e.g. {'na':1.33e-7}
         """
         
-        self.name = comp_a_name +  ' <-> ' + comp_b_name
+        self.name = comp_a_name +  ' <- ' + comp_b_name
         self.comp_a = comp_a_name
         self.comp_b = comp_b_name
         self.comp_a_length = comp_a_length
         self.comp_b_length = comp_b_length
         self.dx =self.comp_a_length/2 + self.comp_b_length/2
-        #self.bound_na_arr, self.bound_k_arr,self.bound_cl_arr,self.bound_x_arr = [],[],[],[] #arr of the various changes occuring at the boundary
-
-        self.ed_setup = [self.name,self.comp_a,self.comp_b,self.dx]
-
-
 
     def calc_diffusion(self,ion="",conc_a=0,conc_b=0):
         """

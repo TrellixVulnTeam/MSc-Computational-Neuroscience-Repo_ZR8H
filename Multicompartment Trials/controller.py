@@ -9,7 +9,7 @@ import pandas as pd
 import h5py
 
 
-file_name ="Experiment-B3-2"
+file_name ="Experiment-B4"
 
 
 # 1) DEFINE SIMULATOR CLASS AND ADD COMPARTMENTS
@@ -29,6 +29,16 @@ sim.add_compartment(comp4)
 comp5 = compartment.Compartment("Comp5")
 comp5.set_ion_properties()
 sim.add_compartment(comp5)
+comp6 = compartment.Compartment("Comp6")
+comp6.set_ion_properties()
+sim.add_compartment(comp6)
+comp7 = compartment.Compartment("Comp7")
+comp7.set_ion_properties()
+sim.add_compartment(comp7)
+comp8 = compartment.Compartment("Comp8")
+comp8.set_ion_properties()
+sim.add_compartment(comp8)
+
 
 
 #sim.add_default_multicompartment(number_of_comps=9)
@@ -40,11 +50,11 @@ sim.set_electrodiffusion_properties(ED_on=True)
 sim.set_external_ion_properties()
 sim.set_j_atp(constant_j_atp=False)
 sim.set_area_scale(constant_ar=False)
-total_t = 6*60
+total_t = 1*60
 time_step = 1e-6
 sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
 #sim.add_synapse("Comp4","Inhibitory",10,2*1e-3,1e-3)
-sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=60, end_t=180, x_conc=1e-3, z=-2.0, flux_rate=5*1e-3/60)
+sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=10, end_t=30, x_conc=1e-3, z=-2.0, flux_rate=10*1e-3/60)
 #sim.set_xflux(comps=["Comp3"], flux_type="static", start_t=100, end_t=500, x_conc=1e-3, z=-1.0, flux_rate=0.4*1e-3/60)
 # sim.set_zflux()
 ##sim.set_xoflux()

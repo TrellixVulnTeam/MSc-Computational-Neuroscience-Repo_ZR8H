@@ -40,7 +40,7 @@ sim.set_area_scale(constant_ar=False)
 total_t = 10
 time_step = 1e-6
 sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
-sim.add_synapse("Comp2", "Inhibitory",1,2*1e-3,1e-3)
+sim.add_synapse("Comp2", "Inhibitory", 0.5, 2*1e-3, 1e-3)
 #sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=10, end_t=30, x_conc=1e-3, z=-2.0, flux_rate=10*1e-3/60)
 #sim.set_xflux(comps=["Comp3"], flux_type="static", start_t=100, end_t=500, x_conc=1e-3, z=-1.0, flux_rate=0.4*1e-3/60)
 # sim.set_zflux()

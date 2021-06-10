@@ -108,7 +108,7 @@ class Compartment:
         I_syn =0
 
         if self.synapse_type == 'Inhibitory':
-            I_syn = self.g_synapse * self.r_t * (self.Vm - self.E_cl)
+            I_syn = self.g_synapse * self.r_t * (self.v - self.E_cl)
             I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
 
             I_syn = I_syn / F  # converting coloumb to mol

@@ -274,6 +274,7 @@ class simulator:
         @param max_neurotransmitter: max neurotransmitter concentration
         @return:
         """
+        self.syn_dict ={}
         self.synapse_on = True
 
         for i in range(len(self.comp_arr)):
@@ -348,7 +349,7 @@ class simulator:
 
                     # appending the electrodiffusion concentrations for each compartment
                 if self.synapse_on:
-                    if self.run_t >= self.synapse_dict['start_t'] and self.run_t <= self.synapse_dict['end_t']:
+                    if self.run_t >= self.syn_dict['start_t'] and self.run_t <= self.syn_dict['end_t']:
                         self.comp_arr[self.syn_dict["compartment"]].synapse_step(run_t=self.run_t)
 
                 for d in self.gen_comps(self.comp_arr):

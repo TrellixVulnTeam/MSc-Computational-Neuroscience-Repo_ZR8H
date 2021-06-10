@@ -92,18 +92,17 @@ class Compartment:
         self.syn_start_t = start_t
         self.duration = duration
         self.nt_max = max_neurotransmitter
-        self.alpha = 0.5  # ms-1.mM-1 == Forward rate constant
-        self.beta = 0.1  # ms-1 == Backward rate constant
+        self.alpha = 0.5 *1e-6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
+        self.beta = 0.1 *1e-3   # ms-1 --> s-1 == Backward rate constant
         self.r_initial = 0  # ratio of NT bound initially
         self.r_t = 0  # current ratio of NT bound
         self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
         self.tau = 1 / (self.alpha * self.nt_max + self.beta)
-        self.g_synapse = 1e-9
+        self.g_synapse = 1e-9*self.ar #1nS -->S
 
     def synapse_step(self, run_t):
 
-        self.r_t = self.r_infinity + (self.r_initial - self.r_infinity)
-        self.r_t = self.r_t * np.exp(-(run_t - self.syn_start_t) / self.tau)
+        self.r_t = self.r_infinity* np.exp(-(run_t - self.syn_start_t) / self.tau)
 
         I_syn =0
 
@@ -113,7 +112,8 @@ class Compartment:
 
             I_syn = I_syn / F  # converting coloumb to mol
             I_syn = I_syn * self.dt # getting the mol input for the timestep
-            self.cl_i += I_syn /self.w
+            cl_entry = I_syn /self.w
+            self.cl_i += cl_entry
 
 
 

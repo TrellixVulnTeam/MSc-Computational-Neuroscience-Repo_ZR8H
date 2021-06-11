@@ -86,36 +86,33 @@ class Compartment:
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
 
-
     def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
         self.synapse_type = synapse_type
         self.syn_start_t = start_t
         self.duration = duration
         self.nt_max = max_neurotransmitter
-        self.alpha = 0.5 *1e-6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
-        self.beta = 0.1 *1e-3   # ms-1 --> s-1 == Backward rate constant
+        self.alpha = 0.5 * 1e6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
+        self.beta = 0.1 * 1e3  # ms-1 --> s-1 == Backward rate constant
         self.r_initial = 0  # ratio of NT bound initially
         self.r_t = 0  # current ratio of NT bound
         self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
         self.tau = 1 / (self.alpha * self.nt_max + self.beta)
-        self.g_synapse = 1e-9*self.ar #1nS -->S
+        self.g_synapse = 1e-9   # 1nS -->S
 
     def synapse_step(self, run_t):
 
-        self.r_t = self.r_infinity* np.exp(-(run_t - self.syn_start_t) / self.tau)
+        self.r_t = self.r_infinity * np.exp(-(run_t - self.syn_start_t) / self.tau)
 
-        I_syn =0
+        I_syn = 0
 
         if self.synapse_type == 'Inhibitory':
             I_syn = self.g_synapse * self.r_t * (self.v - self.E_cl)
             I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
 
             I_syn = I_syn / F  # converting coloumb to mol
-            I_syn = I_syn * self.dt # getting the mol input for the timestep
-            cl_entry = I_syn /self.w
+            I_syn = I_syn * self.dt  # getting the mol input for the timestep
+            cl_entry = I_syn / self.w
             self.cl_i += cl_entry
-
-
 
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,
@@ -200,7 +197,7 @@ class Compartment:
         """
 
         if sign == "positive":
-            self.na_i += (ed_change["na"] / self.length)/ self.w
+            self.na_i += (ed_change["na"] / self.length) / self.w
             self.cl_i += (ed_change["cl"] / self.length) / self.w
             self.k_i += (ed_change["k"] / self.length) / self.w
             self.x_i += (ed_change["x"] / self.length) / self.w

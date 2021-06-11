@@ -48,7 +48,7 @@ class Compartment:
         self.j_kcc2 = 0
         self.j_p = 0
 
-        self.v, self.E_cl, self.E_k, self.drivingf_cl = 0, 0, 0, 0
+        self.v, self.E_cl, self.E_k, self.E_na, self.drivingf_cl = 0, 0, 0, 0, 0
         self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i, self.osm_i = 0, 0, 0, 0, 0, 0
         self.na_i_start, self.x_start, self.z_start = 0, 0, 0
 
@@ -108,11 +108,18 @@ class Compartment:
         if self.synapse_type == 'Inhibitory':
             I_syn = self.g_synapse * self.r_t * (self.v - self.E_cl)
             I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
-
             I_syn = I_syn / F  # converting coloumb to mol
             I_syn = I_syn * self.dt  # getting the mol input for the timestep
             cl_entry = I_syn / self.w
             self.cl_i += cl_entry
+
+        elif self.synapse_type == 'Excitatory':
+            I_syn = self.g_synapse * self.r_t * (self.E_na-self.v)
+            #I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
+            I_syn = I_syn / F  # converting coloumb to mol
+            I_syn = I_syn * self.dt  # getting the mol input for the timestep
+            na_entry = I_syn / self.w
+            self.na_i += na_entry
 
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,
@@ -126,7 +133,7 @@ class Compartment:
 
         # 2) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
-
+        self.E_na = -1 * RTF * np.log(self.na_i / na_o)
         self.E_k = -1 * RTF * np.log(self.k_i / k_o)
         self.E_cl = RTF * np.log(self.cl_i / cl_o)
         self.drivingf_cl = self.v - self.E_cl

@@ -49,6 +49,7 @@ class simulator:
         self.p = 0
         self.start_t, self.end_t, self.run_t, self.total_t, self.dt = 0, 0, 0, 0, 0
         self.xflux_dict = {}
+        self.xflux_count = 0
         self.xoflux_switch = False
         self.xoflux_params = {"start_t": 0, "end_t": 0, "xo_conc": 0, "zo": 0}
         self.xoflux_setup = True
@@ -72,13 +73,13 @@ class simulator:
     def add_default_multicompartment(self, number_of_comps=9):
         """Sets the simulation to run with the default multicompartment model -- 9 compartments + 1 soma"""
 
-        soma = compartment.Compartment("Comp0_Soma", radius=5e-5, length=50e-5)
+        soma = compartment.Compartment("Comp0_Soma", radius=1e-5, length=20e-5)
         soma.set_ion_properties()
         self.add_compartment(soma)
-        # The soma is a compartment with dimensions 5X that of a compartment
+
 
         for i in range(number_of_comps):
-            comp = compartment.Compartment("Comp" + str(i + 1))
+            comp = compartment.Compartment("Comp" + str(i + 1), radius=0.5e-5, length=10e-5)
             comp.set_ion_properties()
             self.add_compartment(comp)
 
@@ -208,8 +209,8 @@ class simulator:
                     self.comp_arr[j].xflux_params["z"] = z
                     self.comp_arr[j].xflux_params["flux_rate"] = flux_rate
 
-        xflux_names_arr.append("X-FLUX-" + str(len(xflux_names_arr)))  # names of the xflux
-
+        xflux_names_arr.append("X-FLUX-" + str(self.xflux_count))  # names of the xflux
+        self.xflux_count +=1
         with h5py.File(self.file_name, mode='a') as self.hdf:
             xflux_group = self.hdf.get("X-FLUX-SETTINGS")
             xflux_group.create_dataset(name=xflux_names_arr[-1], data=xflux_data_arr)

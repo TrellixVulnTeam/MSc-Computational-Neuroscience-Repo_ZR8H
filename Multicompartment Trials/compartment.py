@@ -85,6 +85,7 @@ class Compartment:
         self.na_i_start, self.x_start, self.z_start = na_i, x_i, z_i
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
+            #self.cl_i = self.k_i +self.z_i*self.x_i +self.na_i
 
     def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
         self.synapse_type = synapse_type

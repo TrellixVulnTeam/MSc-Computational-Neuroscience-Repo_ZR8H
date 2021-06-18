@@ -139,9 +139,9 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.Controller" />
       <item itemvalue="Python.Jupyter notebook" />
       <item itemvalue="Python.Sandbox" />
-      <item itemvalue="Python.Controller" />
     </list>
   </component>
   <component name="ServiceViewManager">

@@ -16,6 +16,8 @@ gna = 2e-3/F
 gk = 7e-3/F
 gcl = 2e-3/F
 gx = 1e-8 # gna,gk,gcl: conductances in mS/cm^2 conv to S/dm^2 (10^-3/10^-2) - corrected for neuron
+g_kcc2 = 2e-3/F
+g_na_k_atpase=(10 ** -1) / F
 # stochiometries
 ck = 2
 cna = 3  # cna,ck: pump (ATPase) stoichiometries

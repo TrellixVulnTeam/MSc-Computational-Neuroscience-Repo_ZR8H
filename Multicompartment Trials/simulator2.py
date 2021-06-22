@@ -14,7 +14,7 @@ import pandas as pd
 import compartment
 import electrodiffusion
 
-from common import F
+from common import F, gna,gcl,gk,gx,g_na_k_atpase,g_kcc2,cm
 
 
 class simulator:
@@ -391,6 +391,15 @@ class simulator:
                 dataframe for each compartment
                 self.comp_arr[a].update_arrays()
                 #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""
+
+    def calc_tau(self):
+        g_net = gna + gcl + gk + gx +g_na_k_atpase +g_kcc2
+        tau = 1/g_net * cm
+        return tau
+
+
+
+
 
     def save_to_file(self):
 

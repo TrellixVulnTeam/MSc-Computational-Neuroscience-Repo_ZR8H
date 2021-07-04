@@ -73,15 +73,16 @@ class simulator:
     def add_default_multicompartment(self, number_of_comps=9):
         """Sets the simulation to run with the default multicompartment model -- 9 compartments + 1 soma"""
 
-        soma = compartment.Compartment("Comp0_Soma", radius=1e-5, length=20e-5)
-        soma.set_ion_properties()
-        self.add_compartment(soma)
-
-
         for i in range(number_of_comps):
             comp = compartment.Compartment("Comp" + str(i + 1), radius=0.5e-5, length=10e-5)
             comp.set_ion_properties()
             self.add_compartment(comp)
+
+        soma = compartment.Compartment("Soma", radius=1e-5, length=20e-5)
+        soma.set_ion_properties(na_i=0.013995241563512785,k_i=0.12286753014443351,cl_i=0.005171468255812758,
+                                x_i=0.15496634531836323)
+        self.add_compartment(soma)
+
 
     def get_starting_df(self):
         """Function which when called will return a dataframe of the starting values for each compartment"""
@@ -305,9 +306,6 @@ class simulator:
 
     def run_simulation(self):
 
-        # converting lists to tuples for speed improvements
-        self.comp_arr = tuple(self.comp_arr)
-        self.ed_arr = tuple(self.ed_arr)
 
         self.start_t = time.time()
         for i in range(len(self.comp_arr)):

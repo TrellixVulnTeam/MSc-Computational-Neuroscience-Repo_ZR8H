@@ -78,7 +78,7 @@ class simulator:
             comp.set_ion_properties()
             self.add_compartment(comp)
 
-        soma = compartment.Compartment("Soma", radius=1e-5, length=20e-5)
+        soma = compartment.Compartment("0_Soma", radius=1e-5, length=20e-5)
         soma.set_ion_properties(na_i=0.013995241563512785,k_i=0.12286753014443351,cl_i=0.005171468255812758,
                                 x_i=0.15496634531836323)
         self.add_compartment(soma)

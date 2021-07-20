@@ -73,14 +73,22 @@ class simulator:
     def add_default_multicompartment(self, number_of_comps=9):
         """Sets the simulation to run with the default multicompartment model -- 9 compartments + 1 soma"""
 
+        comp_num = number_of_comps
         for i in range(number_of_comps):
-            comp = compartment.Compartment("Comp" + str(i + 1), radius=0.5e-5, length=10e-5)
-            comp.set_ion_properties()
+            comp = compartment.Compartment("Comp" + str(comp_num), radius=0.0000050000150923793036, length=10e-5)
+            comp.set_ion_properties(na_i=0.01400039289096511, k_i=0.12284598759507755, cl_i=0.0051744633608811, x_i=0.15497892111844958)
             self.add_compartment(comp)
+            comp_num = comp_num-1
 
+<<<<<<< Updated upstream
         soma = compartment.Compartment("0_Soma", radius=1e-5, length=20e-5)
         soma.set_ion_properties(na_i=0.013995241563512785,k_i=0.12286753014443351,cl_i=0.005171468255812758,
                                 x_i=0.15496634531836323)
+=======
+        soma = compartment.Compartment("0_Soma", radius=0.000010000116113628377, length=20e-5)
+        soma.set_ion_properties(na_i=0.01399893134956874, k_i=0.12286356940222269, cl_i=0.005174250131795296,
+                                x_i=0.15496274663947893)
+>>>>>>> Stashed changes
         self.add_compartment(soma)
 
 

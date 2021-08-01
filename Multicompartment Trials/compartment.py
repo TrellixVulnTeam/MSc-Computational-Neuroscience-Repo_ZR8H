@@ -66,6 +66,7 @@ class Compartment:
         self.d_xflux, self.d_zflux, self.total_x_flux, self.static_xflux, self.x_final = 0, 0, 0, 0, 0
         self.osmo_final = 0
         self.z_diff, self.z_final, self.z_diff, self.z_inc, self.zflux = 0, 0, 0, 0, 0
+        self.synapse_on = False
 
         # Zeroing Delta values
         self.d_na_i, self.d_na_atpase, self.d_na_leak = 0, 0, 0
@@ -85,18 +86,34 @@ class Compartment:
         """
         self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i = na_i, k_i, cl_i, x_i, z_i  # Intracellular ion conc.
         self.na_i_start, self.x_start, self.z_start = na_i, x_i, z_i
+        na_o = 145e-3
+        k_o = 3.5e-3
+        cl_o = 119e-3
+        x_o = 29.5e-3
+        z_o = -0.85
+
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
             #self.cl_i = self.k_i +self.z_i*self.x_i +self.na_i
+        self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
+        self.E_na = -1 * RTF * np.log(self.na_i / na_o)
+        self.E_k = -1 * RTF * np.log(self.k_i / k_o)
+        self.E_cl = RTF * np.log(self.cl_i / cl_o)
+        self.drivingf_cl = self.v - self.E_cl
 
     def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
+        self.synapse_on = True
         self.synapse_type = synapse_type
         self.syn_start_t = start_t
         self.duration = duration
         self.nt_max = max_neurotransmitter
-        self.alpha = 0.5 * 1e6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
-        self.beta = 0.1 * 1e3  # ms-1 --> s-1 == Backward rate constant
-        self.r_initial = 0  # ratio of NT bound initially
+        if synapse_type == 'Inhibitory':
+            self.alpha = 0.5e-6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
+            self.beta = 0.1e-3  # ms-1 --> s-1 == Backward rate constant
+        elif synapse_type == 'Excitatory':
+            self.alpha = 2e-6
+            self.beta = 1e-3
+        self.r_initial = 1  # ratio of NT bound initially
         self.r_t = 0  # current ratio of NT bound
         self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
         self.tau = 1 / (self.alpha * self.nt_max + self.beta)
@@ -104,7 +121,7 @@ class Compartment:
 
     def synapse_step(self, run_t):
 
-        self.r_t = self.r_infinity * np.exp(-(run_t - self.syn_start_t) / self.tau)
+        self.r_t = self.r_infinity + (self.r_initial-self.r_infinity)* np.exp(-(run_t - self.syn_start_t) / self.tau)
 
         I_syn = 0
 
@@ -118,7 +135,6 @@ class Compartment:
 
         elif self.synapse_type == 'Excitatory':
             I_syn = self.g_synapse * self.r_t * (self.E_na-self.v)
-            #I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
             I_syn = I_syn / F  # converting coloumb to mol
             I_syn = I_syn * self.dt  # getting the mol input for the timestep
             na_entry = I_syn / self.w

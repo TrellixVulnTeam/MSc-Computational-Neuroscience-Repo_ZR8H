@@ -56,7 +56,7 @@ class simulator:
         self.xo_start, self.cl_o_start, self.d_xoflux, self.xo_final, self.xo_flux, self.t_xoflux = 0, 0, 0, 0, 0, 0
         self.xoflux_points, self.dt_xoflux, self.xo_alpha, self.xo_beta = 0, 0, 0, 0
         self.synapse_dict = {}
-        self.synapse_on = False
+
 
     def add_compartment(self, comp=compartment):
         """Every compartment created needs to be added to the simulator"""
@@ -277,7 +277,7 @@ class simulator:
         @return:
         """
         self.syn_dict ={}
-        self.synapse_on = True
+
 
         for i in range(len(self.comp_arr)):
             if comp_name == self.comp_arr[i].name:
@@ -337,6 +337,9 @@ class simulator:
                             self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
                         self.xoflux()
 
+                    if a.synapse_on:
+                        if self.run_t >= self.syn_dict['start_t'] and self.run_t <= self.syn_dict['end_t']:
+                            a.synapse_step(run_t=self.run_t)
                     # electrodiffusion dictionary for each compartment
 
                 for b in range(len(self.ed_arr)):
@@ -347,9 +350,7 @@ class simulator:
                     self.comp_arr[b + 1].ed_update(ed_conc_changes, "negative")
 
                     # appending the electrodiffusion concentrations for each compartment
-                if self.synapse_on:
-                    if self.run_t >= self.syn_dict['start_t'] and self.run_t <= self.syn_dict['end_t']:
-                        self.comp_arr[self.syn_dict["compartment"]].synapse_step(run_t=self.run_t)
+
 
                 for d in self.gen_comps(self.comp_arr):
                     d.update_volumes(self.dt, self.osm_o,

@@ -2,15 +2,14 @@
 Version of the controller class to be able to start a simulation from where an HDF file started off
 """
 import compartment
-import simulator2
-import pandas as pd
+import simulator3
 import h5py
 # Base file is the original file where the simulation was run
 
 base_file_name = "Experiment-D6"
-new_file_name = "Test-inhib"
+new_file_name = "Test-inhib3"
 
-sim = simulator2.simulator(new_file_name)
+sim = simulator3.simulator(new_file_name)
 
 with h5py.File(base_file_name, mode='r') as hdf:
     C = hdf.get('COMPARTMENTS')
@@ -54,7 +53,7 @@ sim.set_area_scale(constant_ar=False)
 total_t = 0.2
 time_step = 1e-6
 sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
-sim.add_synapse("Comp8", "Inhibitory", 0.05, 1e-3)
+sim.add_synapse("Comp8", "Inhibitory", start_t=0.05, duration=2e-3, max_neurotransmitter= 50e-3)
 
 sim.run_simulation()
 print("fin")

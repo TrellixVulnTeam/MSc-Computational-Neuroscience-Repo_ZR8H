@@ -266,7 +266,7 @@ class simulator:
             return
 
     def add_synapse(self, comp_name='', synapse_type='Inhibitory', start_t=0, duration=2 * 1e-3,
-                    max_neurotransmitter=1e-3):
+                    max_neurotransmitter=1e-3, synapse_conductance=1e-9):
         """
 
         @param synapse_type: either 'Inhibitory' (GABAergic) or 'Excitatory' (Glutamatergic)
@@ -293,7 +293,7 @@ class simulator:
         self.syn_dict["duration"] = duration
         self.syn_dict["end_t"] = start_t + duration
         self.syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
-
+        self.syn_dict["synapse_conductance"] = synapse_conductance
         self.comp_arr[comp_num].set_synapse(synapse_type, start_t, duration, max_neurotransmitter)
 
         with h5py.File(self.file_name, mode='a') as self.hdf:

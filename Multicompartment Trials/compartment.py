@@ -101,12 +101,13 @@ class Compartment:
         self.E_cl = RTF * np.log(self.cl_i / cl_o)
         self.drivingf_cl = self.v - self.E_cl
 
-    def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
+    def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3, synapse_conductance = 1e-9):
         self.synapse_on = True
         self.synapse_type = synapse_type
         self.syn_start_t = start_t
         self.duration = duration
         self.nt_max = max_neurotransmitter
+        self.g_synapse = synapse_conductance
         if synapse_type == 'Inhibitory':
             self.alpha = 0.5e-6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
             self.beta = 0.1e-3  # ms-1 --> s-1 == Backward rate constant
@@ -117,11 +118,11 @@ class Compartment:
         self.r_t = 0  # current ratio of NT bound
         self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
         self.tau = 1 / (self.alpha * self.nt_max + self.beta)
-        self.g_synapse = 1e-9   # 1nS -->S
+        self.g_synapse = 5e-9   # 1nS -->S
 
     def synapse_step(self, run_t):
 
-        self.r_t = self.r_infinity + (self.r_initial-self.r_infinity)* np.exp(-(run_t - self.syn_start_t) / self.tau)
+        self.r_t = self.r_infinity + (self.r_initial)* np.exp(-(run_t) / self.tau)
 
         I_syn = 0
 

@@ -25,7 +25,7 @@ sim.set_j_atp(constant_j_atp=True)
 sim.set_area_scale(constant_ar=False)
 total_t = 720
 time_step = 1e-6
-sim.set_timing(total_t=total_t, time_step=time_step, intervals=1000)
+sim.set_timing(total_t=total_t, time_step=time_step, intervals=3000)
 #sim.add_synapse("Comp2", "Inhibitory", 5, 2 * 1e-3, 1e-2)
 #sim.set_xflux(comps=["Comp2"], flux_type="static", start_t=60, end_t=120, x_conc=1e-3, z=-0.85, flux_rate=10*1e-3/60)
 sim.set_zflux(comps=["Comp8"], start_t=120, end_t=180, z_end=-1.2)

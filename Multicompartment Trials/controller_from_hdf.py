@@ -6,8 +6,9 @@ import simulator3
 import h5py
 # Base file is the original file where the simulation was run
 
-base_file_name = "Experiment-D8"
-new_file_name = "Experiment-G2"z
+base_file_name = "Experiment-D6"
+new_file_name = "Experiment-G2"
+
 
 sim = simulator3.simulator(new_file_name)
 

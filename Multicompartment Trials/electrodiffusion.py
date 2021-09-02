@@ -27,7 +27,7 @@ class Electrodiffusion:
         d_ion is a dictionary in the form {'ion': Diffusion coefficient} e.g. {'na':1.33e-7}
         """
         
-        self.name = comp_a_name +  ' <-> ' + comp_b_name
+        self.name = comp_a_name +  ' -> ' + comp_b_name
         self.comp_a = comp_a_name
         self.comp_b = comp_b_name
         self.comp_a_length = comp_a_length

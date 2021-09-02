@@ -183,11 +183,12 @@ class Compartment:
         self.cl_i = self.cl_i * self.w / self.w2
         self.x_i = self.x_i * self.w / self.w2
 
+        self.radius = np.sqrt(self.w2 / (self.length * np.pi))
+        self.sa = 2 * np.pi * self.radius * self.length
+
         if constant_ar:
             self.ar = self.ar
         else:
-            self.radius = np.sqrt(self.w2 / (self.length * np.pi))
-            self.sa = 2 * np.pi * self.radius * self.length
             self.ar = self.sa / self.w2
 
         self.w = self.w2

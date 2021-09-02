@@ -14,7 +14,7 @@ import pandas as pd
 import compartment
 import electrodiffusion
 
-from common import F
+from common import F, gna,gcl,gk,gx,g_na_k_atpase,g_kcc2,cm
 
 
 class simulator:
@@ -41,25 +41,22 @@ class simulator:
         self.one_percent_t = 0
         self.interval_num = 1
         self.steps = 0
-        self.output_arr, self.output_intervals = [], []
         self.ED_on = True
-        self.ed_setup_arr = []
-        self.ed_dict_arr, self.ed_conc_changes_arr = [], []
         self.constant_j_atp, self.constant_ar = False, False
         self.comp_arr, self.ed_arr = [], []
         self.external_xflux_setup, self.xflux_setup, self.zflux_setup = True, True, True
         self.na_o, self.k_o, self.cl_o, self.x_o, self.z_o, self.osm_o = 0, 0, 0, 0, 0, 0
         self.p = 0
         self.start_t, self.end_t, self.run_t, self.total_t, self.dt = 0, 0, 0, 0, 0
-        self.xflux_names_arr = []
         self.xflux_dict = {}
+        self.xflux_count = 0
         self.xoflux_switch = False
         self.xoflux_params = {"start_t": 0, "end_t": 0, "xo_conc": 0, "zo": 0}
         self.xoflux_setup = True
         self.xo_start, self.cl_o_start, self.d_xoflux, self.xo_final, self.xo_flux, self.t_xoflux = 0, 0, 0, 0, 0, 0
         self.xoflux_points, self.dt_xoflux, self.xo_alpha, self.xo_beta = 0, 0, 0, 0
-        self.synapse_arr =[]
-        self.synapse_names_arr =[]
+        self.synapse_dict = {}
+
 
     def add_compartment(self, comp=compartment):
         """Every compartment created needs to be added to the simulator"""
@@ -73,18 +70,22 @@ class simulator:
         self.num_comps += 1
         self.comp_arr.append(comp)
 
-    def add_default_multicompartment(self, number_of_comps=9):
+    def add_default_multicompartment(self, number_of_comps=9, soma=False):
         """Sets the simulation to run with the default multicompartment model -- 9 compartments + 1 soma"""
 
-        soma = compartment.Compartment("Comp0_Soma", radius=5e-5, length=50e-5)
-        soma.set_ion_properties()
-        self.add_compartment(soma)
-        # The soma is a compartment with dimensions 5X that of a compartment
+        if soma:
+            soma = compartment.Compartment("0_Soma", radius=1e-5, length=20e-5)
+            soma.set_ion_properties(na_i=0.013995241563512785, k_i=0.12286753014443351, cl_i=0.005171468255812758,
+                                    x_i=0.15496634531836323)
+            self.add_compartment(soma)
 
         for i in range(number_of_comps):
-            comp = compartment.Compartment("Comp" + str(i + 1))
+            comp = compartment.Compartment("Comp" + str(i + 1), radius=0.5e-5, length=10e-5)
             comp.set_ion_properties()
             self.add_compartment(comp)
+
+
+
 
     def get_starting_df(self):
         """Function which when called will return a dataframe of the starting values for each compartment"""
@@ -113,31 +114,29 @@ class simulator:
         df_start.columns = ['Radius', 'Length', 'Volume', 'Na_i', 'K_i', 'Cl_i', 'X_i', 'z_i']
         return df_start
 
-    """def set_electrodiffusion_properties(self, ED_on=True):
+
+    def set_electrodiffusion_properties(self, ED_on=True):
         self.ED_on = ED_on
+
+
         with h5py.File(self.file_name, mode='a') as self.hdf:
-            comp_group = self.hdf.get('COMPARTMENTS')
+
             ed_group = self.hdf.get('ELECTRODIFFUSION')
 
-            for e in range(self.num_comps - 1):
-                name = self.comp_arr[e].name + ' <- ' + self.comp_arr[e + 1].name
-                ed_group.create_group(name)
-                comp_a = comp_group.get(self.comp_arr[e].name)
+            if self.ED_on:
+                for e in range(self.num_comps - 1):
+                    name = self.comp_arr[e].name + ' -> ' + self.comp_arr[e + 1].name
+                    ed_group.create_group(name)
 
-                data_a = comp_a.get('0')
-                length_a = data_a[2]
-                comp_b = comp_group.get(self.comp_arr[e + 1].name)
-                data_b = comp_b.get('0')
-                length_b = data_b[2]
+                    ed = electrodiffusion.Electrodiffusion(comp_a_name=self.comp_arr[e].name, comp_a_length=self.comp_arr[e].length,
+                                                               comp_b_name=self.comp_arr[e + 1].name,
+                                                               comp_b_length=self.comp_arr[e+1].length)
+                    self.ed_arr.append(ed)
 
-                ed = electrodiffusion.Electrodiffusion(comp_a_name=self.comp_arr[e].name, comp_a_length=length_a,
-                                                       comp_b_name=self.comp_arr[e + 1].name, comp_b_length=length_b)
-                self.ed_arr.append(ed)
-                self.ed_setup_arr.append(ed.ed_setup)
+            else:
+                ed_group.create_group("NO ED")
 
-            self.hdf.close()"""
-
-
+            self.hdf.close()
 
     def set_external_ion_properties(self, na_o=145e-3, k_o=3.5e-3, cl_o=119e-3, x_o=29.5e-3, z_o=-0.85):
         """
@@ -164,12 +163,14 @@ class simulator:
 
         self.total_steps = self.total_t / self.dt
 
-        self.output_intervals = [0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1]
+        self.output_intervals = (0.001, 0.005, 0.01, 0.1, 0.25, 0.5, 0.75, 1)
         self.output_arr = [round(self.output_intervals[a] * self.total_steps, 0) for a in
                            range(len(self.output_intervals))]
+        self.output_arr = tuple(self.output_arr)
 
         self.interval_step = self.total_steps / intervals
         self.interval_arr = [round(self.interval_step * i) for i in range(intervals)]
+        self.interval_arr = tuple(self.interval_arr)
 
     # print(self.interval_arr)
 
@@ -178,6 +179,7 @@ class simulator:
                   z=-0.85):
 
         xflux_data_arr = []  # array which will be sent to the HDF5 file
+        xflux_names_arr = []
         if all_comps == False:
             xflux_data_arr.append(0)  # value 0 means that all compartments is not selected
         else:
@@ -212,12 +214,11 @@ class simulator:
                     self.comp_arr[j].xflux_params["z"] = z
                     self.comp_arr[j].xflux_params["flux_rate"] = flux_rate
 
-        self.xflux_names_arr.append("X-FLUX-" + str(len(self.xflux_names_arr)))  # names of the xflux
-
-
+        xflux_names_arr.append("X-FLUX-" + str(self.xflux_count))  # names of the xflux
+        self.xflux_count +=1
         with h5py.File(self.file_name, mode='a') as self.hdf:
             xflux_group = self.hdf.get("X-FLUX-SETTINGS")
-            xflux_group.create_dataset(name=self.xflux_names_arr[-1], data=xflux_data_arr)
+            xflux_group.create_dataset(name=xflux_names_arr[-1], data=xflux_data_arr)
 
     def set_zflux(self, all_comps=False, comps=None, start_t=0, end_t=0, z_end=-1):
         """
@@ -268,7 +269,8 @@ class simulator:
         else:
             return
 
-    def add_synapse(self,comp_name='', synapse_type='Inhibitory',start_t=0, duration=2*1e-3, max_neurotransmitter = 1e-3):
+    def add_synapse(self, comp_name='', synapse_type='Inhibitory', start_t=0, duration=2 * 1e-3,
+                    max_neurotransmitter=1e-3, synapse_conductance=1e-9):
         """
 
         @param synapse_type: either 'Inhibitory' (GABAergic) or 'Excitatory' (Glutamatergic)
@@ -278,40 +280,36 @@ class simulator:
         @param max_neurotransmitter: max neurotransmitter concentration
         @return:
         """
-        syn_dict = {}
+        self.syn_dict ={}
+
 
         for i in range(len(self.comp_arr)):
             if comp_name == self.comp_arr[i].name:
                 comp_num = i
-                syn_dict["compartment"] = comp_num
+                self.syn_dict["compartment"] = comp_num
 
         if synapse_type == "Inhibitory":
-            syn_dict["synapse_type"] = 0
+            self.syn_dict["synapse_type"] = 0
         elif synapse_type == "Excitatory":
-            syn_dict["synapse_type"] = 1
+            self.syn_dict["synapse_type"] = 1
 
-        syn_dict["start_t"] = start_t
-        syn_dict["duration"] = duration
-        syn_dict["end_t"] = start_t + duration
-        syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
-
-        self.synapse_arr.append(syn_dict)
-
-
-        self.comp_arr[comp_num].set_synapse(synapse_type,start_t,duration,max_neurotransmitter)
-
-        self.synapse_names_arr.append("SYNAPSE-" + str(len(self.synapse_names_arr)))
+        self.syn_dict["start_t"] = start_t
+        self.syn_dict["duration"] = duration
+        self.syn_dict["end_t"] = start_t + duration
+        self.syn_dict["max_neurotransmitter_conc"] = max_neurotransmitter
+        self.syn_dict["synapse_conductance"] = synapse_conductance
+        self.comp_arr[comp_num].set_synapse(synapse_type, start_t, duration, max_neurotransmitter)
 
         with h5py.File(self.file_name, mode='a') as self.hdf:
+            synapse_name = "SYNAPSE-" + self.comp_arr[comp_num].name
+            syn_data_arr = list(self.syn_dict.values())
             synapse_group = self.hdf.get("SYNAPSE-SETTINGS")
-            syn_data_arr = list(syn_dict.values())
-            synapse_group.create_dataset(name=self.synapse_names_arr[-1], data=syn_data_arr)
+            synapse_group.create_dataset(name=synapse_name, data=syn_data_arr)
 
         return
 
-
-
     def run_simulation(self):
+
 
         self.start_t = time.time()
         for i in range(len(self.comp_arr)):
@@ -319,74 +317,64 @@ class simulator:
 
         while self.run_t < self.total_t:
 
-            if self.ED_on:
-                self.ed_dict_arr, self.ed_conc_changes_arr = [], []
 
-                for a in self.gen_comps(self.comp_arr):
+            for a in self.gen_comps(self.comp_arr):
 
-                    a.step(dt=self.dt,
+                a.step(dt=self.dt,
                            na_o=self.na_o, k_o=self.k_o, cl_o=self.cl_o,
                            constant_j_atp=self.constant_j_atp,
                            p=self.p, p_kcc2=2e-3 / F)
 
                     # step for each compartment
 
-                    if a.xflux_switch and \
-                            (a.xflux_params["start_t"] <= self.run_t <= a.xflux_params["end_t"]):
-                        a.x_flux()
+                if a.xflux_switch and (a.xflux_params["start_t"] <= self.run_t <= a.xflux_params["end_t"]):
+                    a.x_flux()
 
-                    if a.zflux_switch and \
-                            (a.zflux_params["start_t"] <= self.run_t <= a.zflux_params[
+                if a.zflux_switch and \
+                    (a.zflux_params["start_t"] <= self.run_t <= a.zflux_params[
                                 "end_t"]):
-                        a.z_flux()
+                    a.z_flux()
 
-                    if self.xoflux_switch and \
-                            self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
-                        self.xoflux()
+                if self.xoflux_switch and \
+                        self.xoflux_params["start_t"] <= self.run_t <= self.xoflux_params["end_t"]:
+                    self.xoflux()
 
-                    self.ed_dict_arr.append(a.get_ed_dict())
+                if a.synapse_on:
+                    if self.run_t >= self.syn_dict['start_t'] and self.run_t <= self.syn_dict['end_t']:
+                        a.synapse_step(run_t=self.run_t)
                     # electrodiffusion dictionary for each compartment
 
+            if self.ED_on:
                 for b in range(len(self.ed_arr)):
-                    self.ed_conc_changes_arr.append(self.ed_arr[b].calc_ed(self.dt, self.comp_arr[b].w, self.ed_dict_arr[b],
-                                                                           self.ed_dict_arr[b + 1]))
-
-                    # makes an array of all the ED conc changes
-
-                for c in range(len(self.ed_conc_changes_arr)):
-                    self.comp_arr[c].ed_update(self.ed_conc_changes_arr[c], "positive")
-                    self.comp_arr[c + 1].ed_update(self.ed_conc_changes_arr[c], "negative")
+                    ed_conc_changes = self.ed_arr[b].calc_ed(self.dt, self.comp_arr[b].w,
+                                                             self.comp_arr[b].get_ed_dict(),
+                                                             self.comp_arr[b + 1].get_ed_dict())
+                    self.comp_arr[b].ed_update(ed_conc_changes, "positive")
+                    self.comp_arr[b + 1].ed_update(ed_conc_changes, "negative")
 
                     # appending the electrodiffusion concentrations for each compartment
 
-                for e in range(len(self.synapse_arr)):
-                    if self.run_t >= self.synapse_arr[e]['start_t'] and self.run_t <= self.synapse_arr[e]['end_t']:
-                        for s in range(len(self.comp_arr)):
-                            if self.comp_arr[s].name == self.synapse_names_arr[e]:
-                                self.comp_arr[s].synapse_step(run_t=self.run_t)
 
+            for d in self.gen_comps(self.comp_arr):
+                d.update_volumes(self.dt, self.osm_o,self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
 
-                for d in self.gen_comps(self.comp_arr):
-                    d.update_volumes(self.dt, self.osm_o,
-                                     self.constant_ar)  # updates of the volumes, arrays, and dataframe for each compartment
+            for f in range(len(self.output_arr) - 1):
+                if self.steps == self.output_arr[f]:
+                    if f == 2:
+                        self.one_percent_t = time.time() - self.start_t
+                        self.hundred_percent_t = self.one_percent_t * 100
+                        print(str(self.output_intervals[f] * 100) + " % complete in " + str(
+                            round(self.one_percent_t, 2)) + " s")
+                        print("Estimated time to complete :" + str(
+                            round(self.hundred_percent_t / 60, 2)) + " minutes")
+                    else:
+                        print(str(self.output_intervals[f] * 100) + " % complete in " + str(
+                            round(time.time() - self.start_t, 2)) + " s")
 
-                for f in range(len(self.output_arr) - 1):
-                    if self.steps == self.output_arr[f]:
-                        if f == 2:
-                            self.one_percent_t = time.time() - self.start_t
-                            self.hundred_percent_t = self.one_percent_t * 100
-                            print(str(self.output_intervals[f] * 100) + " % complete in " + str(
-                                round(self.one_percent_t, 2)) + " s")
-                            print("Estimated time to complete :" + str(
-                                round(self.hundred_percent_t / 60, 2)) + " minutes")
-                        else:
-                            print(str(self.output_intervals[f] * 100) + " % complete in " + str(
-                                round(time.time() - self.start_t, 2)) + " s")
-
-                if self.interval_num < len(self.interval_arr):
-                    if self.steps == self.interval_arr[self.interval_num]:
-                        self.interval_num += 1
-                        self.save_to_file()
+            if self.interval_num < len(self.interval_arr):
+                if self.steps == self.interval_arr[self.interval_num]:
+                    self.interval_num += 1
+                    self.save_to_file()
 
             self.steps += 1
 
@@ -396,14 +384,13 @@ class simulator:
             round(time.time() - self.start_t, 2)) + " s")
         self.end_t = time.time()
 
-    """elif not self.ED_on:  # if you want to run with normal diffusion not ED
-            for a in range(len(self.comp_arr)):
-                self.comp_arr[a].step()
-                self.comp_arr[a].x_flux()
-                self.comp_arr[a].update_volumes(ar_constant)  # updates of the volumes, arrays, and 
-                dataframe for each compartment
-                self.comp_arr[a].update_arrays()
-                #df_sim[comp_arr[a].name] = comp_arr[d].get_df_array()"""
+
+
+    def calc_tau(self):
+        g_net = gna + gcl + gk + gx +g_na_k_atpase +g_kcc2
+        tau = 1/g_net * cm
+        return tau
+
 
     def save_to_file(self):
 
@@ -414,8 +401,9 @@ class simulator:
                 data_array = self.comp_arr[i].get_array(self.run_t)
                 subgroup.create_dataset(name=str(self.steps), data=data_array)
 
-            for j in range(len(self.ed_arr)):
-                group = self.hdf.get('ELECTRODIFFUSION')
-                subgroup = group.get(self.ed_arr[j].name)
-                data_array = self.ed_arr[j].ed_change_arr
-                subgroup.create_dataset(name=str(self.steps), data=data_array)
+            if self.ED_on:
+                for j in range(len(self.ed_arr)):
+                    group = self.hdf.get('ELECTRODIFFUSION')
+                    subgroup = group.get(self.ed_arr[j].name)
+                    data_array = self.ed_arr[j].ed_change_arr
+                    subgroup.create_dataset(name=str(self.steps), data=data_array)

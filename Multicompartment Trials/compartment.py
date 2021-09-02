@@ -48,7 +48,7 @@ class Compartment:
         self.j_kcc2 = 0
         self.j_p = 0
 
-        self.v, self.E_cl, self.E_k, self.drivingf_cl = 0, 0, 0, 0
+        self.v, self.E_cl, self.E_k, self.E_na, self.drivingf_cl = 0, 0, 0, 0, 0
         self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i, self.osm_i = 0, 0, 0, 0, 0, 0
         self.na_i_start, self.x_start, self.z_start = 0, 0, 0
 
@@ -66,6 +66,7 @@ class Compartment:
         self.d_xflux, self.d_zflux, self.total_x_flux, self.static_xflux, self.x_final = 0, 0, 0, 0, 0
         self.osmo_final = 0
         self.z_diff, self.z_final, self.z_diff, self.z_inc, self.zflux = 0, 0, 0, 0, 0
+        self.synapse_on = False
 
         # Zeroing Delta values
         self.d_na_i, self.d_na_atpase, self.d_na_leak = 0, 0, 0
@@ -75,46 +76,70 @@ class Compartment:
 
         self.dt, self.syn_t_on, self.syn_t_off = 0, 0, 0  # Timing
 
-    def set_ion_properties(self, na_i=14.001840415288e-3, k_i=122.870162657e-3, cl_i=5.1653366e-3,
-                           x_i=154.972660318083e-3, z_i=-0.85,
+    def set_ion_properties(self, na_i =0.013992400181361907, k_i= 0.12285356226659946,cl_i= 0.0051732641296024845,
+                           x_i=0.15497985672007658, z_i = -0.85,
                            osmol_neutral_start=True):
         """
         - Adjustment of starting concentrations to ensure starting electroneutrality
+       old defaults: na_i=14.001840415288e-3, k_i=122.870162657e-3, cl_i=5.1653366e-3,
+                           x_i=154.972660318083e-3, z_i=-0.85
         """
         self.na_i, self.k_i, self.cl_i, self.x_i, self.z_i = na_i, k_i, cl_i, x_i, z_i  # Intracellular ion conc.
         self.na_i_start, self.x_start, self.z_start = na_i, x_i, z_i
+        na_o = 145e-3
+        k_o = 3.5e-3
+        cl_o = 119e-3
+        x_o = 29.5e-3
+        z_o = -0.85
+
         if osmol_neutral_start:
             self.k_i = self.cl_i - self.z_i * self.x_i - self.na_i
+            #self.cl_i = self.k_i +self.z_i*self.x_i +self.na_i
+        self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
+        self.E_na = -1 * RTF * np.log(self.na_i / na_o)
+        self.E_k = -1 * RTF * np.log(self.k_i / k_o)
+        self.E_cl = RTF * np.log(self.cl_i / cl_o)
+        self.drivingf_cl = self.v - self.E_cl
 
-
-    def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3):
+    def set_synapse(self, synapse_type='Inhibitory', start_t=0, duration=2e-3, max_neurotransmitter=1e-3, synapse_conductance = 1e-9):
+        self.synapse_on = True
         self.synapse_type = synapse_type
-        self.syn_start_t = start_t,
+        self.syn_start_t = start_t
         self.duration = duration
         self.nt_max = max_neurotransmitter
-        self.alpha = 0.5  # ms-1.mM-1 == Forward rate constant
-        self.beta = 0.1  # ms-1 == Backward rate constant
-        self.r_initial = 0  # ratio of NT bound initially
+        self.g_synapse = synapse_conductance
+        if synapse_type == 'Inhibitory':
+            self.alpha = 0.5e-6  # ms-1.mM-1 --> s-1.M-1= Forward rate constant
+            self.beta = 0.1e-3  # ms-1 --> s-1 == Backward rate constant
+        elif synapse_type == 'Excitatory':
+            self.alpha = 2e-6
+            self.beta = 1e-3
+        self.r_initial = 1  # ratio of NT bound initially
         self.r_t = 0  # current ratio of NT bound
         self.r_infinity = (self.alpha * self.nt_max) / (self.alpha * self.nt_max + self.beta)
         self.tau = 1 / (self.alpha * self.nt_max + self.beta)
-        self.g_synapse = 1 * 10 - 9
+        self.g_synapse = 5e-9   # 1nS -->S
 
     def synapse_step(self, run_t):
 
-        self.r_t = self.r_infinity + (self.r_initial - self.r_infinity) * np.e ** (-(run_t - self.syn_start_t) / self.tau)
+        self.r_t = self.r_infinity + (self.r_initial)* np.exp(-(run_t) / self.tau)
 
-        I_syn =0
+        I_syn = 0
 
         if self.synapse_type == 'Inhibitory':
-            I_syn = self.g_synapse * self.r_t * (self.Vm - self.E_cl)
+            I_syn = self.g_synapse * self.r_t * (self.v - self.E_cl)
             I_syn = I_syn * 4 / 5  # CL- only contributes about 80% of the GABA current, HCO3- contributes the rest.
-
             I_syn = I_syn / F  # converting coloumb to mol
-            I_syn = I_syn * self.dt # getting the mol input for the timestep
-            self.cl_i += I_syn /self.w
+            I_syn = I_syn * self.dt  # getting the mol input for the timestep
+            cl_entry = I_syn / self.w
+            self.cl_i += cl_entry
 
-
+        elif self.synapse_type == 'Excitatory':
+            I_syn = self.g_synapse * self.r_t * (self.E_na-self.v)
+            I_syn = I_syn / F  # converting coloumb to mol
+            I_syn = I_syn * self.dt  # getting the mol input for the timestep
+            na_entry = I_syn / self.w
+            self.na_i += na_entry
 
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,
@@ -128,7 +153,7 @@ class Compartment:
 
         # 2) Updating voltages
         self.v = self.FinvCAr * (self.na_i + self.k_i + (self.z_i * self.x_i) - self.cl_i)
-
+        self.E_na = -1 * RTF * np.log(self.na_i / na_o)
         self.E_k = -1 * RTF * np.log(self.k_i / k_o)
         self.E_cl = RTF * np.log(self.cl_i / cl_o)
         self.drivingf_cl = self.v - self.E_cl
@@ -200,7 +225,7 @@ class Compartment:
         """
 
         if sign == "positive":
-            self.na_i += (ed_change["na"] / self.length)/ self.w
+            self.na_i += (ed_change["na"] / self.length) / self.w
             self.cl_i += (ed_change["cl"] / self.length) / self.w
             self.k_i += (ed_change["k"] / self.length) / self.w
             self.x_i += (ed_change["x"] / self.length) / self.w

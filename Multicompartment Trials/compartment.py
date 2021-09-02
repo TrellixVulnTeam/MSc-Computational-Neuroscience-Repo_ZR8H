@@ -67,7 +67,7 @@ class Compartment:
         self.osmo_final = 0
         self.z_diff, self.z_final, self.z_diff, self.z_inc, self.zflux = 0, 0, 0, 0, 0
         self.synapse_on = False
-
+        self.current_on = False
         # Zeroing Delta values
         self.d_na_i, self.d_na_atpase, self.d_na_leak = 0, 0, 0
         self.d_k_i, self.d_k_atpase, self.d_k_leak, self.d_k_kcc2 = 0, 0, 0, 0
@@ -135,11 +135,36 @@ class Compartment:
             self.cl_i += cl_entry
 
         elif self.synapse_type == 'Excitatory':
-            I_syn = self.g_synapse * self.r_t * (self.E_na-self.v)
+            I_syn = self.g_synapse * self.r_t * (self.E_na - self.v)
             I_syn = I_syn / F  # converting coloumb to mol
             I_syn = I_syn * self.dt  # getting the mol input for the timestep
             na_entry = I_syn / self.w
             self.na_i += na_entry
+
+    def set_current(self, current_dict=None):
+        if current_dict is None:
+            current_dict = {"Compartment": 0, "Current Type": 0, "Start Time": 0,
+                            "Duration": 0, "End Time":0, "Current Amplitude": 0}
+        self.current_dict = current_dict
+
+        self.mol_per_s = current_dict["Current Amplitude"] / F
+
+        self.current_on = True
+
+    def current_step(self,run_t=0, dt=1e-6):
+
+        if self.current_dict["Current Type"] == 0:  #Inihibitory current
+            cl_current = self.mol_per_s /self.w
+            cl_current = cl_current * dt
+            self.cl_i += + cl_current
+
+        elif self.current_dict["Current Type"] == 1: #Excitatory current
+            na_current = self.mol_per_s / self.w
+            na_current = na_current * dt
+            self.na_i += + na_current
+
+        self.current_on = False
+
 
     def step(self, dt=0.001,
              na_o=0, k_o=0, cl_o=0,

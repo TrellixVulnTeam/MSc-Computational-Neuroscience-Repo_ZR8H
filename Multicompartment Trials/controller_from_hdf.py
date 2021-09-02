@@ -6,8 +6,8 @@ import simulator3
 import h5py
 # Base file is the original file where the simulation was run
 
-base_file_name = "Experiment-D6"
-new_file_name = "Experiment-G2"
+base_file_name = "Experiment-D10-v2"
+new_file_name = "Experiment-H1"
 
 
 sim = simulator3.simulator(new_file_name)
@@ -54,7 +54,8 @@ sim.set_area_scale(constant_ar=False)
 total_t = 0.2
 time_step = 1e-6
 sim.set_timing(total_t=total_t, time_step=time_step, intervals=3000)
-sim.add_synapse("Comp8", "Inhibitory", start_t=0.05, duration=2e-3, max_neurotransmitter= 1e-3, synapse_conductance=1.2e-9)
+#sim.add_synapse("Comp8", "Inhibitory", start_t=0.05, duration=2e-3, max_neurotransmitter= 1e-3, synapse_conductance=1.2e-9)
+sim.add_current("Comp8", current_type="Inhibitory",start_t=0.1,duration=1e-7,current_mA=1e-8)
 
 sim.run_simulation()
 print("fin")

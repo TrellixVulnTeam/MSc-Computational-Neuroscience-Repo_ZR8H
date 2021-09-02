@@ -58,6 +58,7 @@ class simulator:
         self.synapse_dict = {}
 
 
+
     def add_compartment(self, comp=compartment):
         """Every compartment created needs to be added to the simulator"""
 
@@ -308,6 +309,40 @@ class simulator:
 
         return
 
+    def add_current(self, comp_name='', current_type='Inhibitory', start_t=0, duration=2 * 1e-3,
+                    current_mA=1e-3):
+        """
+
+        @param comp_name: compartment name that current is being pulsed into
+        @param current_type: Excitatory or Inhibitory current
+        @param start_t: start time of the current (in seconds)
+        @param duration: duration of current (in seconds)
+        @param current_mA: milliamperes of current
+        @return:
+        """
+
+
+        for i in range(len(self.comp_arr)):
+            if comp_name == self.comp_arr[i].name:
+                comp_num = i
+
+        self.current_dict ={"Compartment":comp_num , "Current Type": 0, "Start Time": start_t,
+                            "Duration":duration, "End Time" :start_t+duration,  "Current Amplitude":current_mA}
+
+        if current_type == "Inhibitory":
+            self.current_dict["Current Type"] = 0
+        elif current_type == "Excitatory":
+            self.current_dict["Current Type"] = 1
+
+        self.comp_arr[comp_num].set_current(self.current_dict)
+
+
+
+
+
+
+
+
     def run_simulation(self):
 
 
@@ -342,6 +377,12 @@ class simulator:
                 if a.synapse_on:
                     if self.run_t >= self.syn_dict['start_t'] and self.run_t <= self.syn_dict['end_t']:
                         a.synapse_step(run_t=self.run_t)
+
+                if a.current_on:
+                    if self.run_t >= self.current_dict["Start Time"] and self.run_t <= self.current_dict["End Time"]:
+                        a.current_step(run_t=self.run_t, dt=self.dt)
+
+
                     # electrodiffusion dictionary for each compartment
 
             if self.ED_on:
